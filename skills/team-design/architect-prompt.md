@@ -63,6 +63,10 @@ Task tool (general-purpose):
        represented in the synthesis. Call out anything that was missed or
        misrepresented.
 
+    Use the same report format as Phase 1 for your Phase 3 review, with
+    findings focused on the specific proposed approaches rather than the
+    original brief.
+
     ## Report Format
 
     Write your report to: [REPORT_OUTPUT_PATH]
