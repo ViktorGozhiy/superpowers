@@ -148,20 +148,13 @@ After saving and committing the plan, invoke `superpowers:reviewing-documents` w
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After the review, send one message with: the plan path; rounds run; whether the reviewer verified the plan against the tree; the plan's `## Review notes`, if any; the reviewers' advice that did not change the plan. Then ask:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+> "Open a second session in the repository directory (for example `claude --model opus`; the model is your choice) and tell me when it is ready. Or say "inline" to execute the plan in this session."
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+Wait for the answer.
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+- The session is ready: use `superpowers:delegating-execution`. A second interactive session executes on the model your partner chose, they watch it live, and this session keeps its context for validating the result.
+- "inline": use `superpowers:executing-plans` here.
 
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
-
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+Subagent-driven development is not offered at this point: a plan that carries the code and was verified against the tree does not need a review gate per task, and the executor session can still choose `superpowers:subagent-driven-development` for a descriptive plan; the plan header names it for that reason.
