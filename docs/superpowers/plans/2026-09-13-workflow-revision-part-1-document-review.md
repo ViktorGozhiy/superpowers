@@ -296,7 +296,7 @@ Return to the calling skill, in prose:
 - [ ] **Step 2: Run the structural test**
 
 Run: `bash tests/claude-code/test-workflow-revision.sh`
-Expected: these lines now pass: `reviewing-documents/SKILL.md exists`, `frontmatter name`, `description starts with Use when`. Still failing under this heading: `reviewing-documents references resolve` and the two `re-review prompt` checks, because `re-review-prompt.md` does not exist yet; everything under the other headings still fails as in Task 1.
+Expected: these lines now pass: `reviewing-documents/SKILL.md exists`, `frontmatter name`, `description starts with Use when`. Still failing under this heading: `reviewing-documents/re-review-prompt.md exists`, `reviewing-documents references resolve`, and the two `re-review prompt` checks, because `re-review-prompt.md` does not exist yet; everything under the other headings still fails as in Task 1.
 
 - [ ] **Step 3: Commit**
 
@@ -877,10 +877,11 @@ cd "$FIXTURE" && claude -p "Use the superpowers brainstorming skill. I want a sh
   --settings '{"enabledPlugins":{"superpowers@superpowers-marketplace":false}}' \
   --permission-mode bypassPermissions --output-format stream-json --verbose > probe-b.jsonl 2>&1
 grep -c '"name":"Agent"' probe-b.jsonl
+grep -o '"model":"[a-z0-9-]*"' probe-b.jsonl | sort | uniq -c
 tail -c 3000 probe-b.jsonl
 ```
 
-Expected: the transcript contains one line with the size estimate (tasks and modules); a reviewer dispatch on `opus`; and a final message that names the branch taken. With only wording edits it says it would invoke writing-plans without waiting; if the reviewer's Issue changed a decision, it shows an "agreed in dialogue / now in spec" pair and waits. Record which branch occurred and the edits list verbatim.
+Expected: the transcript contains one line with the size estimate (tasks and modules); a reviewer dispatch whose model grep shows `"model":"opus"`; and a final message that names the branch taken. With only wording edits it says it would invoke writing-plans without waiting; if the reviewer's Issue changed a decision, it shows an "agreed in dialogue / now in spec" pair and waits. Record which branch occurred and the edits list verbatim.
 
 - [ ] **Step 4: Probe C — writing-plans stops above 12 tasks**
 
@@ -929,11 +930,12 @@ claude -p "Invoke the superpowers reviewing-documents skill with kind spec on $(
   --settings '{"enabledPlugins":{"superpowers@superpowers-marketplace":false}}' \
   --permission-mode bypassPermissions --output-format stream-json --verbose > probe-d.jsonl 2>&1
 grep -c '"name":"Agent"' probe-d.jsonl
+grep -o '"model":"[a-z0-9-]*"' probe-d.jsonl | sort | uniq -c
 git log --oneline -5
 tail -20 docs/superpowers/specs/2026-09-13-contradiction-design.md
 ```
 
-Expected: three `Agent` dispatches (one full review, two scoped re-reviews), each on `opus`; round 2 and round 3 verdicts contain `NOT ADDRESSED` for the contradiction; the spec ends with a `## Review notes` section holding one bullet with the finding, the ruling, and the reason; the fixture's `git log` shows a commit for each round and one `docs: record spec review notes`; the final output reports `Approved with 1 review notes`.
+Expected: three `Agent` dispatches (one full review, two scoped re-reviews), and the model grep shows `"model":"opus"` for them; round 2 and round 3 verdicts contain `NOT ADDRESSED` for the contradiction; the spec ends with a `## Review notes` section holding one bullet with the finding, the ruling, and the reason; the fixture's `git log` shows `docs: address spec review round 1`, `docs: address spec review round 2` (round 3 is a re-review only and commits nothing of its own), and `docs: record spec review notes`; the final output reports `Approved with 1 review notes`.
 
 - [ ] **Step 6: Record observations and commit**
 
