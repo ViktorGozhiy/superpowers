@@ -7,7 +7,7 @@ Use this template for rounds 2 and 3 of the reviewing-documents loop. The re-rev
 ```
 Subagent (general-purpose):
   description: "Re-review <spec|plan> revision, round <R>"
-  model: [MODEL — one tier below this session's model, floor opus; see SKILL.md in this directory]
+  model: [MODEL]
   prompt: |
     You are re-reviewing a revision of a design spec or an implementation plan.
     A previous reviewer raised the findings below; the author revised the
@@ -46,7 +46,7 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — reviewer model per `SKILL.md` in this directory; the floor is `opus`
+- `[MODEL]` — reviewer model per `SKILL.md` in this directory: one tier below this session's model, floor `opus`
 - `[FINDINGS]` — the `Issues` from the previous round, copied verbatim, numbered
 - `[DOCUMENT]` — absolute path of the spec or plan
 - `[DIFF_FILE]` — path of the file holding `git diff <commit the previous round reviewed> HEAD -- <document>`

@@ -55,7 +55,7 @@ assert_md_refs_resolve() {
     dir="$(dirname "$file")"
     while IFS= read -r ref; do
         if [ ! -f "$dir/$ref" ]; then ok=0; echo "    unresolved path: $ref"; fi
-    done < <(grep -o '`[./a-z-]*\.md`' "$file" | tr -d '`' | sort -u)
+    done < <(grep -o '`[./A-Za-z-]*\.md`' "$file" | tr -d '`' | sort -u)
     if [ "$ok" -eq 1 ]; then pass "$label"; else fail "$label" "in file: $file"; fi
 }
 
@@ -70,12 +70,18 @@ assert_contains "$REVIEWING_SKILL" "description: Use when" "description starts w
 assert_md_refs_resolve "$REVIEWING_SKILL" "reviewing-documents references resolve"
 assert_contains "$RE_REVIEW_PROMPT" "[DIFF_FILE]" "re-review prompt takes a diff file"
 assert_contains "$RE_REVIEW_PROMPT" "NOT ADDRESSED" "re-review prompt returns per-finding verdicts"
+assert_md_refs_resolve "$RE_REVIEW_PROMPT" "re-review prompt references resolve"
+assert_contains "$REVIEWING_SKILL" "Three rounds" "round cap is three"
+assert_contains "$REVIEWING_SKILL" "floor" "model floor is stated"
+assert_contains "$REVIEWING_SKILL" "## Review notes" "review notes heading is named"
 
 echo ""
 echo "-- reviewer prompt templates"
 assert_contains "$SPEC_PROMPT" "model:" "spec reviewer dispatch names a model"
 assert_contains "$PLAN_PROMPT" "model:" "plan reviewer dispatch names a model"
 assert_contains "$PLAN_PROMPT" "Tree verification" "plan reviewer checks the plan against the tree"
+assert_md_refs_resolve "$SPEC_PROMPT" "spec reviewer template references resolve"
+assert_md_refs_resolve "$PLAN_PROMPT" "plan reviewer template references resolve"
 
 echo ""
 echo "-- brainstorming"

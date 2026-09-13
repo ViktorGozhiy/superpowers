@@ -17,6 +17,32 @@ You wrote the document, so you read it the way you meant it. A reviewer subagent
 
 Repeated full reads do not converge: every fresh reader also brings a fresh set of taste findings. So this skill runs one full review and then verifies fixes only.
 
+## The loop
+
+```dot
+digraph reviewing_documents {
+    "Round 1: full review (named model)" [shape=box];
+    "Issues Found?" [shape=diamond];
+    "Fix Issues; commit round N" [shape=box];
+    "Scoped re-review of the diff" [shape=box];
+    "All addressed, no new breakage?" [shape=diamond];
+    "Round 3 done?" [shape=diamond];
+    "Rule on each open item; write Review notes; commit" [shape=box];
+    "Output: status, rounds, edits with class, notes, advice" [shape=doublecircle];
+
+    "Round 1: full review (named model)" -> "Issues Found?";
+    "Issues Found?" -> "Output: status, rounds, edits with class, notes, advice" [label="no"];
+    "Issues Found?" -> "Fix Issues; commit round N" [label="yes"];
+    "Fix Issues; commit round N" -> "Scoped re-review of the diff";
+    "Scoped re-review of the diff" -> "All addressed, no new breakage?";
+    "All addressed, no new breakage?" -> "Output: status, rounds, edits with class, notes, advice" [label="yes"];
+    "All addressed, no new breakage?" -> "Round 3 done?" [label="no"];
+    "Round 3 done?" -> "Fix Issues; commit round N" [label="no"];
+    "Round 3 done?" -> "Rule on each open item; write Review notes; commit" [label="yes"];
+    "Rule on each open item; write Review notes; commit" -> "Output: status, rounds, edits with class, notes, advice";
+}
+```
+
 ## Inputs
 
 - `document`: absolute path of the spec or plan. It is already committed.
@@ -37,7 +63,8 @@ Dispatch a fresh `general-purpose` subagent with the template for the kind:
 Both templates return `Status: Approved | Issues Found`, a list of `Issues` (blocking), and `Recommendations` (advisory).
 
 - `Approved`: go to Output with zero edits.
-- `Issues Found`: fix every Issue in the document. Apply a Recommendation only when it clearly improves the document, and only in this revision: a Recommendation on its own never starts a round, because rounds exist for defects that would mislead the next stage. Record the commit the reviewer saw (`git rev-parse HEAD` before editing), then commit the revision: `docs: address <spec|plan> review round 1`.
+- `Approved` with Recommendations: pass the Recommendations to the caller in Output; they are advice for the human, and an approved document is not edited.
+- `Issues Found`: fix every Issue in the document. Apply a Recommendation only when it clearly improves the document, and only in this revision: a Recommendation on its own never starts a round, because rounds exist for defects that would mislead the next stage. Before editing, record the commit the reviewer read (`git rev-parse HEAD`); every re-review diffs from the commit its predecessor read. Then commit the revision: `docs: address <spec|plan> review round 1`.
 
 ## Rounds 2 and 3: scoped re-review
 
@@ -47,18 +74,18 @@ After each revision, dispatch a fresh subagent with `re-review-prompt.md`:
 - `[DOCUMENT]`: `document`.
 - `[DIFF_FILE]`: the output of `git diff <commit the previous round reviewed> HEAD -- <document>`, written to a file in your scratch directory. Pass the path, not the text: a pasted diff stays in your context for the rest of the session.
 
-The re-reviewer verdicts each finding `ADDRESSED` or `NOT ADDRESSED` and lists `New breakage`: contradictions or placeholders that the revision itself introduced. It does not read untouched text for new findings.
+The re-reviewer verdicts each finding `ADDRESSED` or `NOT ADDRESSED` and lists `New breakage`: contradictions or placeholders that the revision itself introduced. It does not read untouched text for new findings; if it reports an observation outside the findings list anyway, pass it to the caller in Output as advice and leave the document alone, because writing it into the document would turn a taste remark into a stop for the human.
 
-Fix open findings and new breakage, commit (`docs: address <spec|plan> review round 2`), and re-review. Round 3 is the last.
+When the re-reviewer returns `All findings addressed` and no new breakage, the loop is done: go to Output. Otherwise record HEAD, fix the open findings and the new breakage, commit (`docs: address <spec|plan> review round 2`), and re-review. Round 3 is the last re-review.
 
 ## The cap
 
-Three rounds: one full review and two scoped re-reviews. When findings are still open after round 3, rule on each one yourself:
+Three rounds: one full review and two scoped re-reviews. When findings or new breakage are still open after round 3, rule on each one yourself:
 
 - fix it now when the fix is small and clearly right;
 - otherwise leave it and record why.
 
-Write every ruling into the document under a final heading `## Review notes`, one bullet per finding: the finding, the ruling, the reason. Commit (`docs: record <spec|plan> review notes`). The section travels with the document to your human partner and to whoever executes the plan, so a finding you overruled is still visible to them.
+Write every ruling into the document under a final heading `## Review notes`, one bullet per open finding: the finding, the ruling, the reason. Only open findings and open new breakage go there; observations outside the findings list stay out of the document. Commit the fixes and the notes together (`docs: record <spec|plan> review notes`). The section travels with the document to your human partner and to whoever executes the plan, so a finding you overruled is still visible to them.
 
 ## Output
 
@@ -67,7 +94,8 @@ Return to the calling skill, in prose:
 - status: `Approved` or `Approved with N review notes`;
 - rounds run;
 - edits made, one line each, and for each edit whether it changed a decision, a requirement, scope, or only wording. The calling skill uses this classification to decide whether to stop for the human;
-- review notes, if any.
+- review notes, if any;
+- advice: the reviewers' Recommendations and any out-of-scope observations, for the human to read; none of it changed the document.
 
 ## Common Rationalizations
 

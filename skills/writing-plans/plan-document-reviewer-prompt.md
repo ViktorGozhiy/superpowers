@@ -9,7 +9,7 @@ Use this template when dispatching a plan document reviewer subagent.
 ```
 Subagent (general-purpose):
   description: "Review plan document"
-  model: [MODEL — one tier below this session's model, floor opus; see ../reviewing-documents/SKILL.md]
+  model: [MODEL]
   prompt: |
     You are a plan document reviewer. Verify this plan is complete and ready for implementation.
 
@@ -51,7 +51,7 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — reviewer model per `../reviewing-documents/SKILL.md`; the floor is `opus`
+- `[MODEL]` — reviewer model per `../reviewing-documents/SKILL.md`: one tier below this session's model, floor `opus`
 - `[PLAN_FILE_PATH]` — absolute path of the plan
 - `[SPEC_FILE_PATH]` — absolute path of the spec the plan implements
 

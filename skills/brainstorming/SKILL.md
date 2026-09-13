@@ -125,6 +125,7 @@ digraph brainstorming {
     "Invoke reviewing-documents (spec)" [shape=box];
     "Material edits?" [shape=diamond];
     "Show agreed / now per edit; wait" [shape=box];
+    "Revert the edit" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
     "Hidden complexity? Upgrade path" [shape=box];
 
@@ -152,7 +153,8 @@ digraph brainstorming {
     "Material edits?" -> "Invoke writing-plans skill" [label="no: one summary message, continue"];
     "Material edits?" -> "Show agreed / now per edit; wait" [label="yes"];
     "Show agreed / now per edit; wait" -> "Invoke writing-plans skill" [label="accepted"];
-    "Show agreed / now per edit; wait" -> "Write design doc" [label="revert requested"];
+    "Show agreed / now per edit; wait" -> "Revert the edit" [label="revert requested"];
+    "Revert the edit" -> "Invoke writing-plans skill";
 }
 ```
 
@@ -230,7 +232,7 @@ The design sections your human partner approved in dialogue are the record of ag
 
 When every edit is non-material, send one message — spec path, rounds run, one line per edit — and invoke writing-plans right away, without waiting for a reply. Your partner already approved each section and can interrupt at any point; asking them to re-read the whole document would repeat work they have done.
 
-When any edit is material, stop. Show only the material items, each as "agreed in dialogue: … / now in spec: …", and ask whether to accept or revert. After the answer, invoke writing-plans.
+When any edit is material, stop. Show only the material items, each as "agreed in dialogue: … / now in spec: …", and ask whether to accept or revert. Revert what your partner rejects, commit, and invoke writing-plans; a reverted edit does not go back through review, because it restores text the review had already seen.
 
 **Implementation:**
 
