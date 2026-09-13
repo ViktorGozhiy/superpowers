@@ -11,7 +11,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that Superpowers works much better with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that Superpowers works much better with access to subagents (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). The whole-branch review in Step 3 needs one.
 
 ## The Process
 
@@ -30,9 +30,12 @@ For each task:
 3. Run verifications as specified
 4. Mark as completed
 
-### Step 3: Complete Development
+### Step 3: Review the Whole Branch
 
-After all tasks complete and verified:
+After all tasks complete and verified, dispatch one reviewer with fresh context over the whole branch: use superpowers:requesting-code-review with its `code-reviewer.md`, name the model (one tier below this session's model, `opus` as the floor, as in `../reviewing-documents/SKILL.md`), and hand it a diff file from `git merge-base <main branch> HEAD` to `HEAD` instead of pasted text. You wrote every commit on this branch, so you read them the way you meant them; the reviewer reads what is there. Fix Critical and Important findings, commit each fix, and re-run the project's checks. Note Minor findings for your human partner.
+
+### Step 4: Complete Development
+
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
