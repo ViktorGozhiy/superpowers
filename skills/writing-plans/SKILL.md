@@ -58,7 +58,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Use superpowers:executing-plans to implement this plan task-by-task, or superpowers:subagent-driven-development when tasks need a per-task review gate. TDD applies in both. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -138,17 +138,13 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
-## Self-Review
+## Size Check
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+Count the tasks before review. A plan with more than 12 tasks will not fit one session's context together with its review rounds and execution, so stop and propose a split point at which the first part leaves the code in a working, tested state. Your human partner decides whether to split or continue with the plan as it is.
 
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+## Review
 
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
-
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
-
-If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+After saving and committing the plan, invoke `superpowers:reviewing-documents` with `kind: plan`, the plan's absolute path, and the spec's absolute path. Its reviewer reads the plan against the spec and against the repository tree — spec coverage, placeholders, type and signature consistency, and whether the files and symbols the plan refers to exist as it assumes — and the skill verifies fixes in scoped re-reviews with a three-round cap. Findings left open at the cap arrive in the plan's `## Review notes` section and travel with it to the executor.
 
 ## Execution Handoff
 
