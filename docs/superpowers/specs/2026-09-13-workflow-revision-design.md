@@ -87,7 +87,7 @@ After a revision, dispatch a fresh subagent with `re-review-prompt.md`. Its inpu
 
 The re-reviewer returns, per Issue, `ADDRESSED` or `NOT ADDRESSED` with a one-line reason, plus `New breakage` for contradictions or placeholders that the revision itself introduced. It does not re-read the untouched text for new findings; that is the point of a scoped re-review, and the prompt says so with the reason (a fresh full read finds a fresh set of taste findings every time and the loop never converges).
 
-Open Issues after a re-review are fixed and re-reviewed again, up to round 3.
+When the re-reviewer returns all findings addressed and no new breakage, the loop ends and the skill goes to its output. Otherwise open Issues and new breakage are fixed, committed, and re-reviewed again, up to round 3. An observation a re-reviewer makes outside the findings list is passed to the caller as advice and is not written into the document.
 
 ### 5.6 Round cap and adjudication
 
@@ -107,7 +107,8 @@ The skill returns to its caller, in prose:
 - final status (`Approved` or `Approved with N review notes`);
 - number of rounds;
 - the list of edits made, one line each, each line saying what changed and whether it changes a decision, a requirement, scope, or only wording;
-- the list of review notes, if any.
+- the list of review notes, if any;
+- advice: Recommendations that were not applied and out-of-scope observations, for the human to read. The callers pass the advice on: brainstorming in its summary message, writing-plans with the handoff.
 
 ### 5.8 Wording
 

@@ -91,18 +91,20 @@ assert_not_contains "$BRAINSTORMING" "Spec self-review" "brainstorming checklist
 assert_not_contains "$BRAINSTORMING" "Spec Self-Review" "brainstorming prose has no inline self-review block"
 assert_contains "$BRAINSTORMING" "12 tasks" "brainstorming states the task-count threshold"
 # render-graphs.js exits 0 even when dot rejects a graph, so feed the block to dot directly.
-if command -v dot >/dev/null 2>&1; then
+assert_graph_parses() {
+    local file="$1" label="$2" graph_file
+    if ! command -v dot >/dev/null 2>&1; then echo "  [SKIP] $label (graphviz not installed)"; return; fi
     graph_file="$(mktemp)"
-    awk '/^```dot$/{on=1; next} /^```$/{on=0} on' "$BRAINSTORMING" > "$graph_file"
+    awk '/^```dot$/{on=1; next} /^```$/{on=0} on' "$file" > "$graph_file"
     if [ -s "$graph_file" ] && dot -Tsvg -o /dev/null "$graph_file" 2>/dev/null; then
-        pass "brainstorming graph parses"
+        pass "$label"
     else
-        fail "brainstorming graph parses" "dot rejected the graph extracted from $BRAINSTORMING"
+        fail "$label" "dot rejected the graph extracted from $file"
     fi
     rm -f "$graph_file"
-else
-    echo "  [SKIP] brainstorming graph parses (graphviz not installed)"
-fi
+}
+assert_graph_parses "$BRAINSTORMING" "brainstorming graph parses"
+assert_graph_parses "$REVIEWING_SKILL" "reviewing-documents graph parses"
 
 echo ""
 echo "-- writing-plans"

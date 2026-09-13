@@ -230,7 +230,7 @@ The design sections your human partner approved in dialogue are the record of ag
 - *Non-material:* wording, a clarification, a missing detail filled in, an internal contradiction resolved. No approved decision changed.
 - *Material:* an approved decision changed; a requirement was added that was not discussed; something agreed was removed; scope changed. Every review note (a finding left open at the cap) is material, because it is a decision taken on your partner's behalf.
 
-When every edit is non-material, send one message — spec path, rounds run, one line per edit — and invoke writing-plans right away, without waiting for a reply. Your partner already approved each section and can interrupt at any point; asking them to re-read the whole document would repeat work they have done.
+When every edit is non-material, send one message — spec path, rounds run, one line per edit, the reviewers' advice if any — and invoke writing-plans right away, without waiting for a reply. Your partner already approved each section and can interrupt at any point; asking them to re-read the whole document would repeat work they have done.
 
 When any edit is material, stop. Show only the material items, each as "agreed in dialogue: … / now in spec: …", and ask whether to accept or revert. Revert what your partner rejects, commit, and invoke writing-plans; a reverted edit does not go back through review, because it restores text the review had already seen.
 

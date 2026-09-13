@@ -62,8 +62,7 @@ Dispatch a fresh `general-purpose` subagent with the template for the kind:
 
 Both templates return `Status: Approved | Issues Found`, a list of `Issues` (blocking), and `Recommendations` (advisory).
 
-- `Approved`: go to Output with zero edits.
-- `Approved` with Recommendations: pass the Recommendations to the caller in Output; they are advice for the human, and an approved document is not edited.
+- `Approved`: go to Output with zero edits. Any Recommendations go to the caller as advice; an approved document is not edited.
 - `Issues Found`: fix every Issue in the document. Apply a Recommendation only when it clearly improves the document, and only in this revision: a Recommendation on its own never starts a round, because rounds exist for defects that would mislead the next stage. Before editing, record the commit the reviewer read (`git rev-parse HEAD`); every re-review diffs from the commit its predecessor read. Then commit the revision: `docs: address <spec|plan> review round 1`.
 
 ## Rounds 2 and 3: scoped re-review
@@ -95,7 +94,7 @@ Return to the calling skill, in prose:
 - rounds run;
 - edits made, one line each, and for each edit whether it changed a decision, a requirement, scope, or only wording. The calling skill uses this classification to decide whether to stop for the human;
 - review notes, if any;
-- advice: the reviewers' Recommendations and any out-of-scope observations, for the human to read; none of it changed the document.
+- advice: the Recommendations you did not apply and any out-of-scope observations, for the human to read; a Recommendation you did apply is listed among the edits instead.
 
 ## Common Rationalizations
 

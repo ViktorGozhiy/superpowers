@@ -95,7 +95,7 @@ in a throwaway fixture repository (one ESM file `src/greet.js`, one spec per pro
 - Agent dispatches: 2 — `Review spec document`, `Re-review spec revision, round 2`, both `model: opus`.
 - Round 1 raised the contradiction as an Issue; the session resolved it by keeping the freeze and moving `shout` to a new file `src/shout.js`, committed `docs: address spec review round 1`. Round 2: all addressed, no new breakage, so the loop ended after two rounds (the clean exit added after the branch review).
 - Edits were classified one by one: two material (the decision about where `shout` lives, and the component that follows from it), three wording-only.
-- Branch taken: **stop**. The session did not invoke writing-plans. It printed one "Agreed in dialogue / Now in spec" pair for the changed decision, asked to accept or revert, and stated it would invoke writing-plans after the answer either way.
+- Branch taken: **stop**. The session did not invoke writing-plans. It printed one "Agreed in dialogue / Now in spec" pair covering the changed decision; the second material edit (the component naming the new file) follows from the first and was folded into the same pair, which the record accepts as one decision, not two. It asked to accept or revert and stated it would invoke writing-plans after the answer either way.
 - Reviewer Recommendations were reported under a separate "Advice from the reviewers, which did not change the spec" heading and were not written into the document (the Output slot added after the branch review).
 - Cost and time: USD 1.58, 268 s, 33 turns.
 

@@ -144,7 +144,7 @@ Count the tasks before review. A plan with more than 12 tasks will not fit one s
 
 ## Review
 
-After saving and committing the plan, invoke `superpowers:reviewing-documents` with `kind: plan`, the plan's absolute path, and the spec's absolute path. Its reviewer reads the plan against the spec and against the repository tree — spec coverage, placeholders, type and signature consistency, and whether the files and symbols the plan refers to exist as it assumes — and the skill verifies fixes in scoped re-reviews with a three-round cap. Findings left open at the cap arrive in the plan's `## Review notes` section and travel with it to the executor.
+After saving and committing the plan, invoke `superpowers:reviewing-documents` with `kind: plan`, the plan's absolute path, and the spec's absolute path. Its reviewer reads the plan against the spec and against the repository tree — spec coverage, placeholders, type and signature consistency, and whether the files and symbols the plan refers to exist as it assumes — and the skill verifies fixes in scoped re-reviews with a three-round cap. Findings left open at the cap arrive in the plan's `## Review notes` section and travel with it to the executor; the reviewers' advice that did not change the plan is reported to your human partner together with the handoff.
 
 ## Execution Handoff
 

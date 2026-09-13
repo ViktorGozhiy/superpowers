@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-13-workflow-revision-design.md` — sections 5, 6, 7.1–7.3, 10, 13.1. Part 2 (sections 7.4, 8, 9, 11) is a separate plan.
 
+> **Executed 2026-09-13.** The whole-branch review afterwards changed the skill text this plan quotes in Tasks 2, 3, 4 and 6 (clean loop exit, advice kept out of Review notes, revert edge routed to writing-plans, bare `[MODEL]` token, extra test assertions). The repository is authoritative; do not re-execute this plan's literal blocks over it.
+
 ## Global Constraints
 
 - Repository: the fork checkout, branch `workflow-revision`. All paths below are relative to its root.
