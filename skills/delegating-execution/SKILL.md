@@ -29,7 +29,7 @@ digraph delegating_execution {
     "Critical or Important findings?" [shape=diamond];
     "Send findings to executor; one fix round; scoped re-review" [shape=box];
     "Record residuals in report: Validation notes" [shape=box];
-    "Release the executor; partner closes it" [shape=box];
+    "Release the executor; wait until it is closed" [shape=box];
     "superpowers:finishing-a-development-branch" [shape=doublecircle];
     "Idle notice or blocked without report: summarize; ask relaunch or inline" [shape=diamond];
     "Finish remaining tasks here (executing-plans)" [shape=doublecircle];
@@ -42,11 +42,11 @@ digraph delegating_execution {
     "Completion message?" -> "Idle notice or blocked without report: summarize; ask relaunch or inline" [label="blocked / idle / expired"];
     "Read report; run project checks" -> "Whole-branch review (named model, diff file)";
     "Whole-branch review (named model, diff file)" -> "Critical or Important findings?";
-    "Critical or Important findings?" -> "Release the executor; partner closes it" [label="no"];
+    "Critical or Important findings?" -> "Release the executor; wait until it is closed" [label="no"];
     "Critical or Important findings?" -> "Send findings to executor; one fix round; scoped re-review" [label="yes"];
     "Send findings to executor; one fix round; scoped re-review" -> "Record residuals in report: Validation notes";
-    "Record residuals in report: Validation notes" -> "Release the executor; partner closes it";
-    "Release the executor; partner closes it" -> "superpowers:finishing-a-development-branch";
+    "Record residuals in report: Validation notes" -> "Release the executor; wait until it is closed";
+    "Release the executor; wait until it is closed" -> "superpowers:finishing-a-development-branch";
     "Idle notice or blocked without report: summarize; ask relaunch or inline" -> "Write and commit the brief" [label="relaunch"];
     "Idle notice or blocked without report: summarize; ask relaunch or inline" -> "Finish remaining tasks here (executing-plans)" [label="inline"];
 }
@@ -63,7 +63,7 @@ Fill `brief-template.md` into `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.
 
 ## 2. Find the executor session
 
-Run `ListAgents`. After this session's own name it lists reachable sessions, one row each: `name [ref]`, busy or idle, start time. Session names derive from the working directory, so choose the most recently started idle session whose name begins with the basename of the directory this session works in. When more than one qualifies, or none does (the new session may still be busy starting), ask your human partner which one; when two rows share a name, address the chosen one with its `[ref]`.
+Run `ListAgents`. After this session's own name it lists reachable sessions, one row each: `name [ref]`, busy or idle, start time. Session names derive from the working directory, so choose the most recently started idle session whose name begins with the basename of the directory this session works in. When more than one qualifies, ask your human partner which one; when none does (the new session may still be busy starting), ask them for its name or to tell you when it is idle; when two rows share a name, address the chosen one with its `[ref]`.
 
 ## 3. Hand over
 
@@ -86,7 +86,7 @@ On a harness without `ListAgents` and `SendMessage`, say so and ask your human p
 2. Run the project's full checks yourself (build and tests), or dispatch one subagent that runs them and returns only the final lines.
 3. Dispatch the whole-branch review with `superpowers:requesting-code-review` and its `../requesting-code-review/code-reviewer.md`. Fill `[MODEL]` with the same default as document reviews, one tier below this session's model with `opus` as the floor (see `../reviewing-documents/SKILL.md`). This deliberately differs from subagent-driven-development, which puts its final review on the most capable model: here the most capable model is this session's, and its budget is what delegation protects. Fill `[DIFF_FILE]` with a file, not pasted text: `git log --oneline <merge-base>..HEAD`, `git diff --stat <merge-base>..HEAD`, and `git diff -U10 <merge-base>..HEAD` written to one file in your scratch directory, where `<merge-base>` is `git merge-base <main branch> HEAD`. Give it the plan path, the report path, and the plan's `## Review notes` if any.
 4. When the review returns Critical or Important findings, send the complete list to the executor in one `SendMessage` call with `notify_when_idle: true`: its context is intact and it fixes cheaper than you would. Ask it to append a fix report to the same report file and to signal `Execution done` again. Then run one scoped re-review with `../subagent-driven-development/re-review-prompt.md`, filling its placeholders as follows: `[MODEL]` the same model as item 3; `[BRIEF_FILE]` the executor brief; `[FINDINGS]` the findings you sent, verbatim, preceded by one line saying that this is the fix round of a whole-branch review, so the template's "one task" and "a broad review happens later" sentences do not apply and out-of-scope observations come back to you; `[REPORT_FILE]` the executor report with the fix report appended; `[FIX_BASE_SHA]` HEAD at the time of the whole-branch review; `[HEAD_SHA]` HEAD after the fixes; `[DIFF_FILE]` a file holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for that range. SDD's `scripts/review-package` is not used because it writes into SDD's per-plan workspace. One fix round only: adjudicate whatever remains and record each ruling in the report under `## Validation notes`, so a decision you took reaches your human partner.
-5. Release the executor: send it one message saying the branch is validated and it can stop, and ask your human partner to close that session. finishing-a-development-branch may remove the worktree the executor sits in, so the executor has to be gone first.
+5. Release the executor: send it one message saying the branch is validated and it can stop, ask your human partner to close that session, and wait for their confirmation before going on. finishing-a-development-branch may remove the worktree the executor sits in, so the executor has to be gone first.
 6. Invoke `superpowers:finishing-a-development-branch` from this session: it holds the dialogue context, so it presents the options and executes the choice.
 
 ## 5. When the executor stops without reporting

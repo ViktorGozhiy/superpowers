@@ -150,11 +150,11 @@ After saving and committing the plan, invoke `superpowers:reviewing-documents` w
 
 After the review, send one message with: the plan path; rounds run; whether the reviewer verified the plan against the tree; the plan's `## Review notes`, if any; the reviewers' advice that did not change the plan. Then ask:
 
-> Open a second session in `<this session's working directory, from pwd>` (for example `claude --model opus`; the model is your choice) and tell me when it is ready. Or say `inline` to execute the plan in this session.
+> Open a second session in `<this session's working directory, from pwd>` (for example `claude --model opus` or `claude --model sonnet`; the model is your choice, and a cheaper one than this session's is the point) and tell me when it is ready. Or say `inline` to execute the plan in this session.
 
 Name the directory explicitly: when the workflow created a worktree, this session works there and the repository root has another branch checked out. Wait for the answer.
 
-- The session is ready: use `superpowers:delegating-execution`. A second interactive session executes on the model your partner chose, they watch it live, and this session keeps its context for validating the result.
+- The session is ready: use `superpowers:delegating-execution`. A second interactive session executes on the model your human partner chose, they watch it live, and this session keeps its context for validating the result.
 - "inline": use `superpowers:executing-plans` here.
 
 Subagent-driven development is not offered at this point: a plan that carries the code and was verified against the tree does not need a review gate per task, and the executor session can still choose `superpowers:subagent-driven-development` for a descriptive plan; the plan header names it for that reason.

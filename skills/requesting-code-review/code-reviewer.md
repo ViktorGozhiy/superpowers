@@ -140,7 +140,7 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — name it on every dispatch; an omitted model inherits the session's, usually the most expensive one. The dispatching skill says which tier.
+- `[MODEL]` — name it on every dispatch; an omitted model inherits the session's, usually the most expensive one. Default: one tier below the session's model, `opus` as the floor, unless the dispatching skill says otherwise.
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
