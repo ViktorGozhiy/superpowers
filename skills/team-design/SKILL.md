@@ -223,4 +223,4 @@ Areas where the team should explore alternatives and propose options.
 How we know the design is good enough.
 ```
 
-The separation between `Decisions Already Made` and `Open Questions` is critical. Agents must not re-litigate closed decisions. Devil's advocate can challenge open questions but not closed ones.
+The separation between `Decisions Already Made` and `Open Questions` is critical. Agents must not re-litigate closed decisions. Devil's advocate can challenge open questions but not closed ones. This saves tokens and focuses discussion.
