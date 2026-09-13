@@ -24,6 +24,7 @@ You MUST create a task for each of these items and complete them in order:
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+3.5. **Team mode decision** — after clarifying questions, evaluate project complexity and propose team or solo mode. If team mode: formulate design brief, invoke team-design skill. If solo: continue with step 4.
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
@@ -52,7 +53,12 @@ digraph brainstorming {
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
     "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Team mode?" [shape=diamond];
+    "Invoke team-design skill" [shape=box];
+    "Ask clarifying questions" -> "Team mode?";
+    "Team mode?" -> "Invoke team-design skill" [label="yes, team mode"];
+    "Team mode?" -> "Propose 2-3 approaches" [label="no, solo"];
+    "Invoke team-design skill" -> "Present design sections";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -79,6 +85,25 @@ digraph brainstorming {
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+
+**Team mode decision (step 3.5):**
+
+After clarifying questions, evaluate whether the project warrants team-based design:
+- Multiple technical domains involved (e.g., backend + security + UX)
+- Complex architecture with multiple integration points
+- High-stakes design where missed issues are costly
+
+If team mode is warranted, propose team composition to the user:
+
+> "The project touches [domains]. I recommend a team design session with: architect, researcher, devil's advocate [+ security] [+ UX/DX]. Or we continue as a pair?"
+
+If user approves team mode:
+1. Formulate a design brief with all context from clarifying questions
+2. Save brief to `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.md`
+3. Invoke `team-design` skill with the brief path
+4. When team-design returns with a design proposal path, resume at brainstorming step 5 (present design sections): read the proposal, present the team's recommended approaches and trade-offs to the user, let the user select and modify, then continue with step 6 (write spec) as usual.
+
+If user chooses solo mode, continue with step 4 (propose approaches) as usual.
 
 **Exploring approaches:**
 
