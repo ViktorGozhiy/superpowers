@@ -164,7 +164,9 @@ The "For agentic workers" line becomes neutral: execute with `superpowers:execut
 
 After the review, the controller sends one message containing: plan path; rounds; whether the plan reviewer verified the plan against the tree; review notes, if any. Then:
 
-> Open a second session in the repository directory (for example `claude --model opus`; the model is your choice) and tell me when it is ready. Or say "inline" to execute the plan in this session.
+> Open a second session in `<this session's working directory, from pwd>` (for example `claude --model opus` or `claude --model sonnet`; the model is your choice, and a cheaper one than this session's is the point) and tell me when it is ready. Or say `inline` to execute the plan in this session.
+
+The directory is named explicitly because the planning session normally works in a worktree while the repository root has another branch checked out.
 
 The controller waits.
 
@@ -187,7 +189,7 @@ The controller writes `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.md` from
 - paths of the plan, the spec, and the acceptance criteria (a section of the spec or an issue reference);
 - **method:** the executor chooses inline (`executing-plans`), subagents (`subagent-driven-development`), or a mix, and stops after the last plan task's commit: the whole-branch review and finishing-a-development-branch belong to the planning session, so the executor skips those steps of whichever skill it uses. One hint: when the plan carries the code and was verified against the tree, transcription with tests is enough and per-task review adds little; when the plan is descriptive, `superpowers:subagent-driven-development` gives each task its own review;
 - **non-negotiables:** TDD; one green commit per task; the project's quality gates and instructions file; reviewers that the executor dispatches work in a git worktree, never in the shared tree;
-- **hard limits:** no push, no PR, no edits outside the plan's file map unless the code forces it, no destructive operations, no other branches;
+- **hard limits:** no push, no PR, no edits outside the plan's file map unless the code forces it, no destructive operations, no other branches, no whole-branch review and no finishing-a-development-branch from the executor (the planning session runs both);
 - **deviations:** when the code disagrees with the plan, the executor follows the code, records the deviation and its reason in the report, and continues;
 - **report contract:** `docs/superpowers/briefs/YYYY-MM-DD-<topic>-report.md` with start and end times, method chosen, subagent count, per-task commits, deviations, test evidence (commands and results), open questions;
 - **completion signal:** the executor's last action is a message to the planning session (named in the brief) saying the work is done and naming the report path.
@@ -206,7 +208,7 @@ On the completion message:
 1. Read the report. Check that every task has a commit and that deviations are explained.
 2. Run the project's full verification (build and tests) from the planning session, or via one subagent that reports only the summary.
 3. Dispatch a whole-branch review: `superpowers:requesting-code-review` with `code-reviewer.md`, on the same explicit mid-tier model as document reviews (5.3), with the branch diff from `git merge-base main HEAD` to `HEAD` written to a file, plus the plan's and report's paths and any review notes. This deliberately differs from subagent-driven-development, which puts its final review on the most capable model: here the most capable model is the planning session's, and its budget is what delegation protects. SDD keeps its own rule; the two skills are entered from different handoffs and do not run together.
-4. If the review returns Critical or Important findings, send the complete list to the executor session in one `SendMessage` call with `notify_when_idle: true`: its context is intact and it fixes cheaper than the planning session would. Then run one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`, the code counterpart of the document re-review, filling its placeholders as follows: `[MODEL]` is the same mid-tier model as in step 3; `[BRIEF_FILE]` is the executor brief; `[REPORT_FILE]` is the executor report, to which the executor appends its fix report; `[FIX_BASE_SHA]` is HEAD at the time of the whole-branch review; `[HEAD_SHA]` is HEAD after the fixes; `[DIFF_FILE]` is a file in the session's scratch directory holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for that range. This is the manual form that SDD documents; `scripts/review-package` is not used because it writes into SDD's per-plan workspace. One fix round only; residual findings are adjudicated and recorded in the report under `## Validation notes`.
+4. If the review returns Critical or Important findings, send the complete list to the executor session in one `SendMessage` call with `notify_when_idle: true`: its context is intact and it fixes cheaper than the planning session would. Then run one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`, the code counterpart of the document re-review, filling its placeholders as follows: `[MODEL]` is the same mid-tier model as in step 3; `[FINDINGS]` is preceded by one line saying this is the fix round of a whole-branch review, so the template's "one task" and "a broad review happens later" sentences do not apply and out-of-scope observations come back to the planning session; `[BRIEF_FILE]` is the executor brief; `[REPORT_FILE]` is the executor report, to which the executor appends its fix report; `[FIX_BASE_SHA]` is HEAD at the time of the whole-branch review; `[HEAD_SHA]` is HEAD after the fixes; `[DIFF_FILE]` is a file in the session's scratch directory holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for that range. This is the manual form that SDD documents; `scripts/review-package` is not used because it writes into SDD's per-plan workspace. One fix round only; residual findings are adjudicated and recorded in the report under `## Validation notes`.
 5. Release the executor: one message saying the branch is validated and it can stop; the human closes that session before the branch is finished, because finishing may remove the worktree the executor sits in.
 6. Invoke `superpowers:finishing-a-development-branch` from the planning session, which holds the dialogue context.
 
@@ -247,7 +249,7 @@ The dispatch example gains `model: [MODEL]`, and the "Git Range to Review" secti
 
 ## 11. README
 
-A section "About this fork" after the introduction: three to five sentences naming the three changes (fresh-subagent document review with a three-round cap, automatic spec-to-plan transition, delegated execution to a second session), the `team-design` branch as an archived experiment, and a pointer to this spec. No personal data beyond the GitHub account name already in the repository URL.
+A section "About this fork" after "How it works": a two-sentence lead and three short bullets naming the three changes (fresh-subagent document review with a three-round cap, automatic spec-to-plan transition, delegated execution to a second session), the `team-design` branch as an archived experiment, and a pointer to this spec. No personal data beyond the GitHub account name already in the repository URL.
 
 ## 12. Parameters
 

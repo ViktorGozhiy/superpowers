@@ -228,7 +228,7 @@ After committing the spec, invoke `superpowers:reviewing-documents` with `kind: 
 The design sections your human partner approved in dialogue are the record of agreed decisions; the spec writes them down, and the review checks the writing. Classify each edit the review reported:
 
 - *Non-material:* wording, a clarification, a missing detail filled in, an internal contradiction resolved. No approved decision changed.
-- *Material:* an approved decision changed; a requirement was added that was not discussed; something agreed was removed; scope changed. Every review note (a finding left open at the cap) is material, because it is a decision taken on your partner's behalf.
+- *Material:* an approved decision changed; a requirement was added that was not discussed; something agreed was removed; scope changed. Every review note (a finding left open at the cap) is material, because it is a decision taken on your human partner's behalf.
 
 When every edit is non-material, send one message — spec path, rounds run, one line per edit, the reviewers' advice if any — and invoke writing-plans right away, without waiting for a reply. Your human partner already approved each section and can interrupt at any point; asking them to re-read the whole document would repeat work they have done.
 

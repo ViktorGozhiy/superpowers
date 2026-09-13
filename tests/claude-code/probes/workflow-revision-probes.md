@@ -116,7 +116,16 @@ in a throwaway fixture repository (one ESM file `src/greet.js`, one spec per pro
 - The message did not mention subagent-driven development. No execution happened: `src/` unchanged, `git log` shows only the fixture and the plan commit.
 - Cost and time: USD 1.17, 196 s, 17 turns.
 
-**Verdict:** matches the spec (7.4). The end-to-end delegation to a second interactive session needs a human at the second terminal and is recorded as Probe G after the rollout.
+**Verdict:** matches the spec (7.4) as it stood at the time of the run. The branch review afterwards changed the handoff sentence to name the planning session's working directory instead of "the repository directory"; the quoted sentence above is the pre-fix text. The end-to-end delegation to a second interactive session needs a human at the second terminal and is recorded as Probe G after the rollout.
+
+## Validation notes
+
+Rulings on the residuals of the Part 2 whole-branch review and its scoped re-review, 2026-09-13:
+
+- `subagent-driven-development` keeps its own closing steps (final review, finishing) with no carve-out for a delegated executor; the brief's Method and Hard limits carry that instruction instead, because the spec leaves SDD untouched. Watch Probe G for an executor that runs SDD to its end anyway.
+- `code-reviewer.md` now states a default model tier in its Placeholders list, so a standalone caller of requesting-code-review is not left with an empty `[MODEL]`; the skill's process text stays as upstream wrote it.
+- The README "About this fork" section is a lead plus three bullets; the spec's wording was updated to match rather than compressing the section back into prose.
+- `executing-plans` Step 1 may ask a delegated executor to create a worktree when the workflow made none; `using-git-worktrees` detects an existing worktree and asks for consent, so no text change.
 
 ## Summary
 

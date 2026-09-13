@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-13-workflow-revision-design.md` — sections 7.4, 8, 9, 11, plus the Part 2 items of 13.1 and 14. Part 1 (sections 5, 6, 7.1–7.3, 10) is already on the branch.
 
+> **Executed 2026-09-13.** The whole-branch review afterwards changed the skill text this plan quotes in Tasks 2–5 (working directory instead of repository directory in the handoff, executor release step, `[MODEL]` and `[DIFF_FILE]` slots in `code-reviewer.md`, the executor's carve-out from the branch review and finishing). The repository is authoritative; do not re-execute this plan's literal blocks over it.
+
 ## Global Constraints
 
 - Repository: the fork checkout, branch `workflow-revision`. All paths below are relative to its root.
