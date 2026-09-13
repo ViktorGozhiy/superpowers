@@ -33,7 +33,7 @@
 - Consumes: the helpers already in the script (`assert_file`, `assert_contains`, `assert_not_contains`, `assert_skill_refs_resolve`, `assert_md_refs_resolve`, `assert_graph_parses`).
 - Produces: the assertions Tasks 2–6 turn green.
 
-- [ ] **Step 1: Add the file variables**
+- [ ] **Step 1: Add the file variables and guard the graph helper**
 
 After the line `PLAN_PROMPT="$SKILLS/writing-plans/plan-document-reviewer-prompt.md"` add:
 
@@ -43,6 +43,14 @@ BRIEF_TEMPLATE="$SKILLS/delegating-execution/brief-template.md"
 EXECUTING_PLANS="$SKILLS/executing-plans/SKILL.md"
 README="$REPO_ROOT/README.md"
 ```
+
+In `assert_graph_parses`, insert as the first line of the function body, before the `if ! command -v dot` line:
+
+```bash
+    [ -f "$file" ] || { fail "$label" "missing file: $file"; return; }
+```
+
+The script runs under `set -euo pipefail`; without the guard, `awk` on a missing file exits 2 and aborts the whole run before the `STATUS:` line, so the red run in Step 4 would have no report to read.
 
 - [ ] **Step 2: Add the delegating-execution section**
 
@@ -87,7 +95,7 @@ assert_contains "$README" "**delegating-execution**" "README lists delegating-ex
 - [ ] **Step 4: Run the test to see the new assertions fail**
 
 Run: `bash tests/claude-code/test-workflow-revision.sh`
-Expected: `STATUS: FAILED (18 failures)`: every line under `-- delegating-execution skill` (12), the three new `-- writing-plans` lines, and under `-- executing-plans and README` the two `executing-plans` content lines and the three README lines. `executing-plans skill references resolve` passes (its references exist). All Part 1 lines still pass.
+Expected: `STATUS: FAILED (19 failures)`: every line under `-- delegating-execution skill` (12), two of the three new `-- writing-plans` lines (`handoff keeps inline execution` already passes, because the v6.3.0 handoff mentions `superpowers:executing-plans`), and under `-- executing-plans and README` the two `executing-plans` content lines and the three README lines. `executing-plans skill references resolve` passes (its references exist). All Part 1 lines still pass.
 
 - [ ] **Step 5: Commit**
 
@@ -391,7 +399,7 @@ Subagent-driven development is not offered at this point: a plan that carries th
 - [ ] **Step 2: Run the structural test**
 
 Run: `bash tests/claude-code/test-workflow-revision.sh`
-Expected: the three new `-- writing-plans` lines pass. Only `-- executing-plans and README` content lines still fail.
+Expected: the two red `-- writing-plans` lines flip to green (the third was already green). Only `-- executing-plans and README` content lines still fail.
 
 - [ ] **Step 3: Commit**
 
@@ -502,7 +510,7 @@ Insert before `## Commercial Services`:
 ```markdown
 ## About this fork
 
-This fork tracks upstream Superpowers and changes three things in the workflow. Specs and plans are reviewed by fresh subagents on an explicitly named model in a bounded loop (`reviewing-documents`: one full review, scoped re-reviews of the fixes, three rounds, then recorded rulings). After the spec review, brainstorming continues to writing-plans on its own when the review changed nothing the human agreed to, and stops with an "agreed / now" comparison when it did. Execution is delegated by default to a second interactive session that the human opens and watches (`delegating-execution`), with the planning session validating the result; inline execution stays available on request, and subagent-driven development stays in the library for the executor to choose. The design is in `docs/superpowers/specs/2026-09-13-workflow-revision-design.md`. The `team-design` branch holds an earlier, archived experiment with role-based design sessions.
+This fork tracks upstream Superpowers and changes three things in the workflow. Specs and plans are reviewed by fresh subagents on an explicitly named model in a bounded loop (`reviewing-documents`: one full review, scoped re-reviews of the fixes, three rounds, then recorded rulings). After the spec review, brainstorming continues to writing-plans on its own when the review changed nothing the human agreed to, and stops with an "agreed / now" comparison when it did. Execution is delegated by default to a second interactive session that the human opens and watches (`delegating-execution`), with the planning session validating the result; inline execution stays available on request, and subagent-driven development stays in the library for the executor to choose. The design is in `docs/superpowers/specs/2026-09-13-workflow-revision-design.md`. "How it works" above describes upstream's flow; in this fork the step after "go" is the handoff described here. The `team-design` branch holds an earlier, archived experiment with role-based design sessions.
 
 ```
 
@@ -576,7 +584,7 @@ git log --format='%ae %ce' -1
 
 - [ ] **Step 1: Run the probe**
 
-Reuse the Probe A fixture (or recreate it with Probe A's Step 1 from Part 1's plan). From the fixture directory, with `<REPO_ROOT>` the fork checkout:
+Reuse the Probe A fixture, or recreate it with "Step 1: Create the fixture repository" of Part 1's probes task (Task 8 there). From the fixture directory, with `<REPO_ROOT>` the fork checkout:
 
 ```bash
 claude -p "Use the superpowers writing-plans skill to write the implementation plan for docs/superpowers/specs/2026-09-13-farewell-design.md. Follow the skill to its end, including the execution handoff, and stop where it tells you to wait for me." \
@@ -628,7 +636,7 @@ Expected: one identity line whose two email fields are both the noreply address;
 
 - [ ] **Step 3: Whole-branch review of Part 2**
 
-Dispatch `superpowers:requesting-code-review` with `code-reviewer.md`, `model: opus`, `[BASE_SHA]` = the last Part 1 commit (`git log --format=%H -1 -- tests/claude-code/probes/workflow-revision-probes.md` before Task 7, or the commit `3e04ebf`), `[HEAD_SHA]` = `HEAD`, a diff file as in `delegating-execution` step 4.3, and this plan's and the spec's paths. Fix Critical and Important findings, one commit per fix, then one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`. Record residual rulings in the probes file under a `## Validation notes` heading.
+Dispatch `superpowers:requesting-code-review` with `code-reviewer.md`, `model: opus`, `[BASE_SHA]` = the Part 2 plan commit (`git log --format=%H -1 -- docs/superpowers/plans/2026-09-13-workflow-revision-part-2-delegated-execution.md` before Task 7 changes anything else, currently `7f3a2b9`), so the diff holds only Part 2's implementation, `[HEAD_SHA]` = `HEAD`, a diff file as in `delegating-execution` step 4.3, and this plan's and the spec's paths. Fix Critical and Important findings, one commit per fix, then one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`. Record residual rulings in the probes file under a `## Validation notes` heading.
 
 - [ ] **Step 4: Push**
 
