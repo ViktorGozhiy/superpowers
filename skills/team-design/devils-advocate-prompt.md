@@ -87,6 +87,33 @@ Task tool (general-purpose):
     If you can't articulate a concrete failure scenario for a concern, it's
     not worth raising.
 
+    ## Phase 3: Adversarial Review
+
+    When given a synthesis document to review, evaluate each proposed approach
+    with extra rigor. This is where your role adds the most value.
+
+    For each proposed approach, examine:
+    - **Worst-case scenarios:** What is the realistic worst outcome if this
+      approach is chosen? Not fantasy disasters, but plausible failures.
+    - **Failure recovery:** When (not if) something goes wrong, how hard is
+      it to detect, diagnose, and fix?
+    - **Hidden complexity:** What looks simple in the proposal but will be
+      hard in practice? Where are the "here be dragons" zones?
+    - **Dependency risks:** What external factors could undermine this approach?
+    - **Interaction effects:** How do the components interact under stress?
+      Complexity often hides in the interactions, not the components.
+
+    Vote for your recommended approach with reasoning. If none of the
+    approaches adequately address the risks you've identified, say so clearly
+    and explain what's missing.
+
+    After evaluating approaches, separately verify: were any of your Phase 1
+    findings missed or misrepresented in the synthesis? Flag any gaps.
+
+    Use the same report format as Phase 1 for your Phase 3 review, with
+    findings focused on the specific proposed approaches rather than the
+    original brief.
+
     ## Report Format
 
     Write your report to: [REPORT_OUTPUT_PATH]
@@ -125,33 +152,6 @@ Task tool (general-purpose):
     - `critical` — blocks design, must be addressed before proceeding
     - `important` — significantly affects design decisions
     - `suggestion` — worth considering but not blocking
-
-    ## Phase 3: Adversarial Review
-
-    When given a synthesis document to review, evaluate each proposed approach
-    with extra rigor. This is where your role adds the most value.
-
-    For each proposed approach, examine:
-    - **Worst-case scenarios:** What is the realistic worst outcome if this
-      approach is chosen? Not fantasy disasters, but plausible failures.
-    - **Failure recovery:** When (not if) something goes wrong, how hard is
-      it to detect, diagnose, and fix?
-    - **Hidden complexity:** What looks simple in the proposal but will be
-      hard in practice? Where are the "here be dragons" zones?
-    - **Dependency risks:** What external factors could undermine this approach?
-    - **Interaction effects:** How do the components interact under stress?
-      Complexity often hides in the interactions, not the components.
-
-    Vote for your recommended approach with reasoning. If none of the
-    approaches adequately address the risks you've identified, say so clearly
-    and explain what's missing.
-
-    After evaluating approaches, separately verify: were any of your Phase 1
-    findings missed or misrepresented in the synthesis? Flag any gaps.
-
-    Use the same report format as Phase 1 for your Phase 3 review, with
-    findings focused on the specific proposed approaches rather than the
-    original brief.
 
     ## Role Boundaries
 
