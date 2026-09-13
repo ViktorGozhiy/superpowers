@@ -70,6 +70,8 @@ Write `[REPORT_PATH]` as you go and finish it before you signal. Sections:
 - **Evidence:** the commands you ran for the project's checks and their final lines.
 - **Open questions:** anything the planning session has to decide.
 
+Commit the report yourself as the last commit, `docs: add execution report for [TOPIC]`. It is the one commit expected beyond the one per plan task, so the planning session finds the report in git and not only on disk.
+
 ## Completion signal
 
 Your last action: send one message to the session named `[PLANNING_SESSION]`

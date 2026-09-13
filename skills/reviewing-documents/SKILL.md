@@ -60,7 +60,7 @@ Dispatch a fresh `general-purpose` subagent with the template for the kind:
 - `spec`: `../brainstorming/spec-document-reviewer-prompt.md` with `[SPEC_FILE_PATH]` = `document`.
 - `plan`: `../writing-plans/plan-document-reviewer-prompt.md` with `[PLAN_FILE_PATH]` = `document` and `[SPEC_FILE_PATH]` = `spec`.
 
-Both templates return `Status: Approved | Issues Found`, a list of `Issues` (blocking), and `Recommendations` (advisory).
+Both templates return `Status: Approved | Issues Found`, a list of `Issues` (blocking), and `Recommendations` (advisory). A report the harness marks as truncated is incomplete: ask the reviewer for the rest before acting on it, because the verdict and the last findings are what gets cut.
 
 - `Approved`: go to Output with zero edits. Any Recommendations go to the caller as advice; an approved document is not edited.
 - `Issues Found`: fix every Issue in the document. Apply a Recommendation only when it clearly improves the document, and only in this revision: a Recommendation on its own never starts a round, because rounds exist for defects that would mislead the next stage. Before editing, record the commit the reviewer read (`git rev-parse HEAD`); every re-review diffs from the commit its predecessor read. Then commit the revision: `docs: address <spec|plan> review round 1`.

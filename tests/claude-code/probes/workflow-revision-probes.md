@@ -127,6 +127,33 @@ Rulings on the residuals of the Part 2 whole-branch review and its scoped re-rev
 - The README "About this fork" section is a lead plus three bullets; the spec's wording was updated to match rather than compressing the section back into prose.
 - `executing-plans` Step 1 may ask a delegated executor to create a worktree when the workflow made none; `using-git-worktrees` detects an existing worktree and asks for consent, so no text change.
 
+## Probe G — live delegated execution end to end
+
+**Purpose:** the whole path with a human at a second terminal: brainstorming, spec review, automatic transition, plan review, handoff, `delegating-execution`, executor session, validation, branch finish. Run after the fork was installed as `superpowers@superpowers-dev` 6.3.0-fork.1.
+
+**Fixture:** a fresh repository with one ESM module `src/greet.js`, no `package.json`, no instructions file. Request: `farewell(name)` in a new file with `node --test` tests and a `package.json` with `"type": "module"`, asked for as architectural so the full path runs. Planning session on Opus 5 (interactive); executor session opened by the human with `claude --model opus` in the same directory.
+
+**Observed (from the planning session's report, sent by cross-session message):**
+- Wall clock 24 minutes from first question to merged branch; 524 lines of planning documents for 49 lines of shipped code.
+- Size estimate printed (3 tasks, one module). Spec review: 1 round, Approved, 3 advisory recommendations, no edits; the transition to writing-plans ran without a stop. Plan review: 1 round, Approved, no edits; the reviewer executed the plan's steps in a scratch copy and confirmed red and green. Handoff message named the working directory and offered the two modes.
+- `delegating-execution`: brief committed, executor found with `ListAgents`, brief sent with `notify_when_idle: true`. Executor ran 2 minutes, chose `executing-plans` inline (the brief's literal-plan hint), one commit, sent `Execution done: <report path>` with four deviations inline. The idle notice arrived after the completion message, redundant as designed. Planning session re-ran the checks (8 tests pass), dispatched the whole-branch review on `opus` with a diff file (0 Critical, 0 Important, 3 Minor), released the executor, ran finishing-a-development-branch: merge to main, branch deleted.
+- Subagent dispatches: 3, all `opus`, model named on each. Cross-session messages: 4 (brief, done, idle notice, release).
+- Executor deviations, all sound: no worktree (the brief forbade new branches and the branch was already checked out clean); skipped the branch review and finishing per the brief; created `test/`, which the plan's file map did not name; left its report untracked.
+
+**Did not match the skill text, or was untested:**
+1. A false claim ("`farewell` never throws"; it throws on an object without a prototype) survived the spec reviewer, the plan reviewer, and reached the code reviewer, which flagged it as Minor. An absence-of-exceptions claim is not testable; the human was asked whether to soften it and did not answer, so it stayed.
+2. The plan reviewer reported the scratch copy's branch as the repository's branch. A reviewer that executes the plan in a copy can report the copy's state as fact.
+3. The whole-branch reviewer's report was truncated by the harness; recovering the rest cost a round trip. No skill said what to do. Fixed after the probe: `reviewing-documents` and `delegating-execution` now say a truncated report is incomplete and the reviewer is asked for the rest first.
+4. Both documents were approved in round 1, so the scoped re-review, the cap, `## Review notes`, the material stop, and the delegated fix round were not exercised here (Probes B, D, E covered them headlessly).
+5. The brief never said who commits the executor's report; the executor left it untracked as a reasoned choice and the planning session committed it. Fixed after the probe: the brief template asks the executor to commit the report as the last commit.
+6. writing-plans produced a one-task plan, correct under its right-sizing rules, so the multi-task header shape (Interfaces "Consumes: nothing", Global Constraints, the SDD pointer) was noise here.
+7. finishing-a-development-branch prescribes `git pull` and offers a pull request; the fixture had no remote. Upstream text, unchanged.
+8. `[PROJECT_CHECKS]` asks for the project's instructions file; the fixture had none, so the planning session wrote `node --test` and said so.
+9. The request was bounded by the skill's own classification and ran architectural only because asked; the planning session said so once and ran the heavy path.
+10. An ambiguous reply ("Aha") at a design section gate was not treated as approval; the section was re-presented. The skill has no rule for ambiguous replies; the behaviour was the safe one.
+
+**Verdict:** matches the spec (7.4, 8.1–8.5, 9) on the path that ran. Items 3 and 5 changed skill text; the rest are observations for later revisions or upstream behaviour.
+
 ## Summary
 
 | Probe | Dispatches (model) | Branch or outcome | Matches spec |
@@ -137,5 +164,6 @@ Rulings on the residuals of the Part 2 whole-branch review and its scoped re-rev
 | D | 3 (opus) | cap reached; 2 review notes | yes, with the Review notes correction above |
 | E | 2 (opus) | stop; one "agreed / now" pair shown | yes |
 | F | 1 (opus) | handoff: two modes, waits | yes |
+| G | 3 (opus), live | full path with a second terminal, 24 min | yes, with two text fixes |
 
 Total probe cost: USD 7.76. Observations worth carrying into Part 2: the handoff text seen in Probe A is the one Part 2 replaces; the strict reading of "zero edits after Approved" in Probe A is the intended behaviour and needs no change.
