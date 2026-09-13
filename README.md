@@ -5,6 +5,7 @@ Superpowers is a complete software development methodology for your coding agent
 ## Table of Contents
 
 - [How it works](#how-it-works)
+- [About this fork](#about-this-fork)
 - [Commercial Services](#commercial-services)
 - [Getting Started](#installation)
   - [Claude Code](#claude-code)
@@ -41,6 +42,10 @@ After you've signed off on the design, your agent puts together an implementatio
 Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+
+## About this fork
+
+This fork tracks upstream Superpowers and changes three things in the workflow. Specs and plans are reviewed by fresh subagents on an explicitly named model in a bounded loop (`reviewing-documents`: one full review, scoped re-reviews of the fixes, three rounds, then recorded rulings). After the spec review, brainstorming continues to writing-plans on its own when the review changed nothing the human agreed to, and stops with an "agreed / now" comparison when it did. Execution is delegated by default to a second interactive session that the human opens and watches (`delegating-execution`), with the planning session validating the result; inline execution stays available on request, and subagent-driven development stays in the library for the executor to choose. The design is in `docs/superpowers/specs/2026-09-13-workflow-revision-design.md`. "How it works" above describes upstream's flow; in this fork the step after "go" is the handoff described here. The `team-design` branch holds an earlier, archived experiment with role-based design sessions.
 
 ## Commercial Services
 
@@ -266,7 +271,7 @@ turn loses the bootstrap — start a fresh session if skills stop triggering.
 
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+4. **delegating-execution** or **executing-plans** - Activates with a reviewed plan. Hands the plan to a second interactive session that the human watches, then validates the result with a whole-branch review; or executes inline in this session with the same final review. The executor session may use **subagent-driven-development** for a descriptive plan.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
@@ -299,6 +304,8 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
+- **reviewing-documents** - Fresh-subagent review of specs and plans in a bounded loop
+- **delegating-execution** - Hand a reviewed plan to a second session, then validate the branch
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback

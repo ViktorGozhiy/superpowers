@@ -92,6 +92,17 @@ Tests skill content and requirements (~2 minutes):
 - Review loops documented
 - Task context provision documented
 
+#### test-workflow-revision.sh
+Structural checks for the document review loop and delegated execution (seconds, no Claude calls):
+- `reviewing-documents` and `delegating-execution` skill files exist and their references resolve
+- Reviewer prompt templates name a model; the plan template checks the tree
+- brainstorming and writing-plans invoke `reviewing-documents`; inline self-review blocks are gone
+- The writing-plans handoff offers delegated and inline execution
+- The `dot` graphs in brainstorming, reviewing-documents, and delegating-execution parse
+- README describes the fork and lists the two new skills
+
+Behaviour probes for the same changes are recorded in `probes/workflow-revision-probes.md`.
+
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh
