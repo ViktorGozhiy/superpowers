@@ -123,17 +123,18 @@ assert_contains "$BRAINSTORMING" "superpowers:reviewing-documents" "brainstormin
 assert_not_contains "$BRAINSTORMING" "Spec self-review" "brainstorming checklist has no inline self-review step"
 assert_not_contains "$BRAINSTORMING" "Spec Self-Review" "brainstorming prose has no inline self-review block"
 assert_contains "$BRAINSTORMING" "12 tasks" "brainstorming states the task-count threshold"
+# render-graphs.js exits 0 even when dot rejects a graph, so feed the block to dot directly.
 if command -v dot >/dev/null 2>&1; then
-    render_dir="$(mktemp -d)"
-    cp "$BRAINSTORMING" "$render_dir/SKILL.md"
-    if node "$SKILLS/writing-skills/render-graphs.js" "$render_dir" >/dev/null 2>&1; then
-        pass "brainstorming graph renders"
+    graph_file="$(mktemp)"
+    awk '/^```dot$/{on=1; next} /^```$/{on=0} on' "$BRAINSTORMING" > "$graph_file"
+    if [ -s "$graph_file" ] && dot -Tsvg -o /dev/null "$graph_file" 2>/dev/null; then
+        pass "brainstorming graph parses"
     else
-        fail "brainstorming graph renders" "render-graphs.js failed on $BRAINSTORMING"
+        fail "brainstorming graph parses" "dot rejected the graph extracted from $BRAINSTORMING"
     fi
-    rm -rf "$render_dir"
+    rm -f "$graph_file"
 else
-    echo "  [SKIP] brainstorming graph renders (graphviz not installed)"
+    echo "  [SKIP] brainstorming graph parses (graphviz not installed)"
 fi
 
 echo ""
@@ -186,7 +187,7 @@ Expected: `STATUS: FAILED` with these failing lines (others pass because the tex
 - `[FAIL] spec reviewer dispatch names a model`, `[FAIL] plan reviewer dispatch names a model`, `[FAIL] plan reviewer checks the plan against the tree`
 - `[FAIL] brainstorming invokes reviewing-documents`, `[FAIL] brainstorming checklist has no inline self-review step`, `[FAIL] brainstorming prose has no inline self-review block`, `[FAIL] brainstorming states the task-count threshold`
 - `[FAIL] writing-plans invokes reviewing-documents`, `[FAIL] writing-plans has no inline self-review section`, `[FAIL] plan header no longer recommends SDD`, `[FAIL] writing-plans states the task-count threshold`
-- `[PASS] brainstorming graph renders` (the v6.3.0 graph is valid)
+- `[PASS] brainstorming graph parses` (the v6.3.0 graph is valid)
 
 - [ ] **Step 4: Commit**
 
@@ -295,7 +296,7 @@ Return to the calling skill, in prose:
 - [ ] **Step 2: Run the structural test**
 
 Run: `bash tests/claude-code/test-workflow-revision.sh`
-Expected: these lines now pass: `reviewing-documents/SKILL.md exists`, `frontmatter name`, `description starts with Use when`. Still failing: `reviewing-documents references resolve` (because `re-review-prompt.md` does not exist yet) and everything under the other headings.
+Expected: these lines now pass: `reviewing-documents/SKILL.md exists`, `frontmatter name`, `description starts with Use when`. Still failing under this heading: `reviewing-documents references resolve` and the two `re-review prompt` checks, because `re-review-prompt.md` does not exist yet; everything under the other headings still fails as in Task 1.
 
 - [ ] **Step 3: Commit**
 
@@ -328,7 +329,7 @@ Use this template for rounds 2 and 3 of the reviewing-documents loop. The re-rev
 ```
 Subagent (general-purpose):
   description: "Re-review <spec|plan> revision, round <R>"
-  model: [MODEL — one tier below this session's model, floor opus; see reviewing-documents/SKILL.md]
+  model: [MODEL — one tier below this session's model, floor opus; see SKILL.md in this directory]
   prompt: |
     You are re-reviewing a revision of a design spec or an implementation plan.
     A previous reviewer raised the findings below; the author revised the
@@ -367,7 +368,7 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — reviewer model per reviewing-documents/SKILL.md; the floor is `opus`
+- `[MODEL]` — reviewer model per `SKILL.md` in this directory; the floor is `opus`
 - `[FINDINGS]` — the `Issues` from the previous round, copied verbatim, numbered
 - `[DOCUMENT]` — absolute path of the spec or plan
 - `[DIFF_FILE]` — path of the file holding `git diff <commit the previous round reviewed> HEAD -- <document>`
@@ -415,7 +416,7 @@ with:
 ```
 Subagent (general-purpose):
   description: "Review spec document"
-  model: [MODEL — one tier below this session's model, floor opus; see reviewing-documents/SKILL.md]
+  model: [MODEL — one tier below this session's model, floor opus; see ../reviewing-documents/SKILL.md]
   prompt: |
 ```
 
@@ -450,7 +451,7 @@ with:
 ```
 Subagent (general-purpose):
   description: "Review plan document"
-  model: [MODEL — one tier below this session's model, floor opus; see reviewing-documents/SKILL.md]
+  model: [MODEL — one tier below this session's model, floor opus; see ../reviewing-documents/SKILL.md]
   prompt: |
 ```
 
@@ -589,7 +590,7 @@ with:
 - [ ] **Step 3: Run the structural test**
 
 Run: `bash tests/claude-code/test-workflow-revision.sh`
-Expected: under `-- brainstorming`, `brainstorming states the task-count threshold` and `brainstorming graph renders` pass; `brainstorming invokes reviewing-documents` and the two self-review absence checks still fail.
+Expected: under `-- brainstorming`, `brainstorming states the task-count threshold` and `brainstorming graph parses` pass; `brainstorming invokes reviewing-documents` and the two self-review absence checks still fail.
 
 - [ ] **Step 4: Commit**
 
@@ -726,7 +727,7 @@ When any edit is material, stop. Show only the material items, each as "agreed i
 - [ ] **Step 4: Run the structural test and render the graph**
 
 Run: `bash tests/claude-code/test-workflow-revision.sh`
-Expected: every line under `-- brainstorming` passes, including `brainstorming graph renders`. Only `-- writing-plans` lines still fail.
+Expected: every line under `-- brainstorming` passes, including `brainstorming graph parses`. Only `-- writing-plans` lines still fail.
 
 Run: `grep -n 'self-review\|Self-Review\|User Review Gate' skills/brainstorming/SKILL.md`
 Expected: no output.
@@ -744,7 +745,7 @@ git log --format='%ae %ce' -1
 ### Task 7: Writing-plans size check, review, and neutral header
 
 **Files:**
-- Modify: `skills/writing-plans/SKILL.md` — the plan header template (lines 61–63), the `## Self-Review` section (lines 141–151), and a new `## Size Check` section inserted before the review section
+- Modify: `skills/writing-plans/SKILL.md` — the plan header line (line 61), the `## Self-Review` section (lines 141–151), and a new `## Size Check` section inserted before the review section
 
 **Interfaces:**
 - Consumes: `superpowers:reviewing-documents` (Task 2).
@@ -906,7 +907,35 @@ tail -c 2000 probe-c.jsonl
 
 Expected: the final message proposes a split point (which helpers form the first plan) and states that the plan exceeds 12 tasks; no reviewer dispatch happened before the stop (`grep -c '"name":"Agent"' probe-c.jsonl` prints `0`).
 
-- [ ] **Step 5: Record observations and commit**
+- [ ] **Step 5: Probe D — reviewing-documents reaches the cap and writes Review notes**
+
+Create a spec with a deliberate contradiction and tell the session to leave it alone, so the finding stays open through round 3:
+
+```bash
+cd "$FIXTURE" && cat > docs/superpowers/specs/2026-09-13-contradiction-design.md <<'EOF'
+# Contradiction Design
+
+## Goal
+Add `whisper(name)` to `src/greet.js`.
+
+## Requirements
+- `whisper("Ada")` returns the greeting in lower case.
+- `whisper("Ada")` returns the greeting in upper case.
+- Tests live in `test/greet.test.js` and run with `node --test`.
+EOF
+git add -A && git commit -q -m "fixture: contradiction spec"
+claude -p "Invoke the superpowers reviewing-documents skill with kind spec on $(pwd)/docs/superpowers/specs/2026-09-13-contradiction-design.md. Constraint for this run: the lower-case/upper-case pair in Requirements is a business decision you are not allowed to change or resolve in the document; treat every other finding normally. Follow the skill to its end and print its output." \
+  --model opus --plugin-dir "<REPO_ROOT>" \
+  --settings '{"enabledPlugins":{"superpowers@superpowers-marketplace":false}}' \
+  --permission-mode bypassPermissions --output-format stream-json --verbose > probe-d.jsonl 2>&1
+grep -c '"name":"Agent"' probe-d.jsonl
+git log --oneline -5
+tail -20 docs/superpowers/specs/2026-09-13-contradiction-design.md
+```
+
+Expected: three `Agent` dispatches (one full review, two scoped re-reviews), each on `opus`; round 2 and round 3 verdicts contain `NOT ADDRESSED` for the contradiction; the spec ends with a `## Review notes` section holding one bullet with the finding, the ruling, and the reason; the fixture's `git log` shows a commit for each round and one `docs: record spec review notes`; the final output reports `Approved with 1 review notes`.
+
+- [ ] **Step 6: Record observations and commit**
 
 Write `tests/claude-code/probes/workflow-revision-probes.md` with one section per probe: purpose, command, observed dispatches and models, observed branch, verbatim excerpts that support the observation, and a one-line verdict (matches spec / deviates, with the deviation). Keep transcripts out of the repository; they contain absolute paths of the machine.
 
@@ -933,7 +962,7 @@ Expected: `Failed:  0`, `STATUS: PASSED`. (`test-subagent-driven-development.sh`
 - [ ] **Step 2: Run the render test that covers the graph tool**
 
 Run: `bash tests/writing-skills/test-render-graphs.sh`
-Expected: `STATUS: PASSED` (the tool this plan relies on still works).
+Expected: last line `Results: 8 passed, 0 failed`, exit code 0 (the graph tool the skills rely on still works).
 
 - [ ] **Step 3: Personal-data and identity check**
 
