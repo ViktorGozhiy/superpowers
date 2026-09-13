@@ -101,6 +101,23 @@ in a throwaway fixture repository (one ESM file `src/greet.js`, one spec per pro
 
 **Verdict:** matches the spec (6.3 stop path) and the fixed skill text (5.5 clean exit, 5.7 advice in Output).
 
+## Probe F — writing-plans hands off with two modes and waits
+
+**Purpose:** the rewritten Execution Handoff sends one summary message, offers a second session or "inline", does not offer subagent-driven development, and waits. Run after Part 2's Tasks 1–6.
+
+**Fixture:** a fresh copy of Probe A's repository (one ESM file `src/greet.js`, the farewell spec).
+
+**Prompt:** "Use the superpowers writing-plans skill to write the implementation plan for docs/superpowers/specs/2026-09-13-farewell-design.md. Follow the skill to its end, including the execution handoff, and stop where it tells you to wait for me."
+
+**Observed:**
+- Skills invoked: `superpowers:writing-plans`, then `superpowers:reviewing-documents`.
+- Agent dispatches: 1 — `Review plan document`, `model: opus`. Approved in round 1, zero edits.
+- The handoff message contained, in order: the plan path and commit, rounds run, tree verification (the reviewer executed the plan in a scratch copy), "Review notes: None", the reviewer's two advisory points labelled as advice that did not change the plan, and then the exact handoff question: "Open a second session in the repository directory (for example `claude --model opus`; the model is your choice) and tell me when it is ready. Or say "inline" to execute the plan in this session." Final line: "I'll wait for your answer."
+- The message did not mention subagent-driven development. No execution happened: `src/` unchanged, `git log` shows only the fixture and the plan commit.
+- Cost and time: USD 1.17, 196 s, 17 turns.
+
+**Verdict:** matches the spec (7.4). The end-to-end delegation to a second interactive session needs a human at the second terminal and is recorded as Probe G after the rollout.
+
 ## Summary
 
 | Probe | Dispatches (model) | Branch or outcome | Matches spec |
@@ -110,5 +127,6 @@ in a throwaway fixture repository (one ESM file `src/greet.js`, one spec per pro
 | C | 0 | stop; 7 + 7 split proposed | yes |
 | D | 3 (opus) | cap reached; 2 review notes | yes, with the Review notes correction above |
 | E | 2 (opus) | stop; one "agreed / now" pair shown | yes |
+| F | 1 (opus) | handoff: two modes, waits | yes |
 
-Total probe cost: USD 6.59. Observations worth carrying into Part 2: the handoff text seen in Probe A is the one Part 2 replaces; the strict reading of "zero edits after Approved" in Probe A is the intended behaviour and needs no change.
+Total probe cost: USD 7.76. Observations worth carrying into Part 2: the handoff text seen in Probe A is the one Part 2 replaces; the strict reading of "zero edits after Approved" in Probe A is the intended behaviour and needs no change.
