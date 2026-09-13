@@ -99,9 +99,8 @@ your path and complete them in order.
 5. **Propose 2-3 approaches** — with trade-offs and your recommendation
 6. **Present design** — in sections scaled to their complexity, get user approval after each section
 7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-9. **User reviews written spec** — ask user to review the spec file before proceeding
-10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+8. **Review the spec** — invoke `superpowers:reviewing-documents` with `kind: spec` (see below)
+9. **Continue or stop** — classify the review's edits: all non-material, summarize in one message and invoke writing-plans at once; any material edit, show "agreed / now" for each and wait (see below)
 
 ## Process Flow
 
@@ -116,12 +115,16 @@ digraph brainstorming {
     "Implement via normal workflow (no plan doc)" [shape=doublecircle];
     "Explore project context" [shape=box];
     "Ask clarifying questions" [shape=box];
+    "Estimate size: tasks, services" [shape=box];
+    "Over 12 tasks or 2+ services?" [shape=diamond];
+    "Propose a split; brainstorm first sub-project" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
+    "Invoke reviewing-documents (spec)" [shape=box];
+    "Material edits?" [shape=diamond];
+    "Show agreed / now per edit; wait" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
     "Hidden complexity? Upgrade path" [shape=box];
 
@@ -135,15 +138,21 @@ digraph brainstorming {
     "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
     "Hidden complexity? Upgrade path" -> "Classify: spike / bounded / architectural";
     "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Ask clarifying questions" -> "Estimate size: tasks, services";
+    "Estimate size: tasks, services" -> "Over 12 tasks or 2+ services?";
+    "Over 12 tasks or 2+ services?" -> "Propose a split; brainstorm first sub-project" [label="yes"];
+    "Propose a split; brainstorm first sub-project" -> "Ask clarifying questions";
+    "Over 12 tasks or 2+ services?" -> "Propose 2-3 approaches" [label="no"];
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "Write design doc" -> "Invoke reviewing-documents (spec)";
+    "Invoke reviewing-documents (spec)" -> "Material edits?";
+    "Material edits?" -> "Invoke writing-plans skill" [label="no: one summary message, continue"];
+    "Material edits?" -> "Show agreed / now per edit; wait" [label="yes"];
+    "Show agreed / now per edit; wait" -> "Invoke writing-plans skill" [label="accepted"];
+    "Show agreed / now per edit; wait" -> "Write design doc" [label="revert requested"];
 }
 ```
 
@@ -210,22 +219,18 @@ is the whole process.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
-**Spec Self-Review:**
-After writing the spec document, look at it with fresh eyes:
+**Spec Review:**
+After committing the spec, invoke `superpowers:reviewing-documents` with `kind: spec` and the spec's absolute path. It dispatches a fresh reviewer that reads the spec without the history of writing it, verifies fixes in scoped re-reviews, stops after three rounds, and returns the list of edits it made, each classified as a change of decision, requirement, scope, or wording only.
 
-1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
-2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
-3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
-4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+**Continue or Stop:**
+The design sections your human partner approved in dialogue are the record of agreed decisions; the spec writes them down, and the review checks the writing. Classify each edit the review reported:
 
-Fix any issues inline. No need to re-review — just fix and move on.
+- *Non-material:* wording, a clarification, a missing detail filled in, an internal contradiction resolved. No approved decision changed.
+- *Material:* an approved decision changed; a requirement was added that was not discussed; something agreed was removed; scope changed. Every review note (a finding left open at the cap) is material, because it is a decision taken on your partner's behalf.
 
-**User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+When every edit is non-material, send one message — spec path, rounds run, one line per edit — and invoke writing-plans right away, without waiting for a reply. Your partner already approved each section and can interrupt at any point; asking them to re-read the whole document would repeat work they have done.
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
-
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+When any edit is material, stop. Show only the material items, each as "agreed in dialogue: … / now in spec: …", and ask whether to accept or revert. After the answer, invoke writing-plans.
 
 **Implementation:**
 
