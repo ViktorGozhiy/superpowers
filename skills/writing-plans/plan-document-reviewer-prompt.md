@@ -9,6 +9,7 @@ Use this template when dispatching a plan document reviewer subagent.
 ```
 Subagent (general-purpose):
   description: "Review plan document"
+  model: [MODEL — one tier below this session's model, floor opus; see ../reviewing-documents/SKILL.md]
   prompt: |
     You are a plan document reviewer. Verify this plan is complete and ready for implementation.
 
@@ -23,6 +24,7 @@ Subagent (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Tree verification | Open every file the plan modifies. Do the classes, functions, signatures, imports, and test names the plan refers to exist as the plan assumes? Do the plan's new symbols collide with existing ones? Report each mismatch with file and line. |
 
     ## Calibration
 
@@ -32,6 +34,8 @@ Subagent (general-purpose):
 
     Approve unless there are serious gaps — missing requirements from the spec,
     contradictory steps, placeholder content, or tasks so vague they can't be acted on.
+    A mismatch between the plan and the repository tree is an Issue: the
+    implementer will either build on a wrong assumption or stop.
 
     ## Output Format
 
@@ -45,5 +49,10 @@ Subagent (general-purpose):
     **Recommendations (advisory, do not block approval):**
     - [suggestions for improvement]
 ```
+
+**Placeholders:**
+- `[MODEL]` — reviewer model per `../reviewing-documents/SKILL.md`; the floor is `opus`
+- `[PLAN_FILE_PATH]` — absolute path of the plan
+- `[SPEC_FILE_PATH]` — absolute path of the spec the plan implements
 
 **Reviewer returns:** Status, Issues (if any), Recommendations

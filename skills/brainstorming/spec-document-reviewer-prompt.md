@@ -9,6 +9,7 @@ Use this template when dispatching a spec document reviewer subagent.
 ```
 Subagent (general-purpose):
   description: "Review spec document"
+  model: [MODEL — one tier below this session's model, floor opus; see ../reviewing-documents/SKILL.md]
   prompt: |
     You are a spec document reviewer. Verify this spec is complete and ready for planning.
 
@@ -45,5 +46,9 @@ Subagent (general-purpose):
     **Recommendations (advisory, do not block approval):**
     - [suggestions for improvement]
 ```
+
+**Placeholders:**
+- `[MODEL]` — reviewer model per `../reviewing-documents/SKILL.md`; the floor is `opus`
+- `[SPEC_FILE_PATH]` — absolute path of the spec
 
 **Reviewer returns:** Status, Issues (if any), Recommendations
