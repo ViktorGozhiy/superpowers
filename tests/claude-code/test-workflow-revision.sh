@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Structural checks for the workflow revision: the reviewing-documents skill
+# exists and is referenced, its cross-directory references resolve, the
+# brainstorming graph parses, and the inline self-review blocks are gone.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SKILLS="$REPO_ROOT/skills"
+
+REVIEWING_SKILL="$SKILLS/reviewing-documents/SKILL.md"
+RE_REVIEW_PROMPT="$SKILLS/reviewing-documents/re-review-prompt.md"
+BRAINSTORMING="$SKILLS/brainstorming/SKILL.md"
+WRITING_PLANS="$SKILLS/writing-plans/SKILL.md"
+SPEC_PROMPT="$SKILLS/brainstorming/spec-document-reviewer-prompt.md"
+PLAN_PROMPT="$SKILLS/writing-plans/plan-document-reviewer-prompt.md"
+
+failures=0
+
+pass() { echo "  [PASS] $1"; }
+fail() { echo "  [FAIL] $1"; shift; for line in "$@"; do echo "    $line"; done; failures=$((failures + 1)); }
+
+assert_file() {
+    if [ -f "$1" ]; then pass "$2"; else fail "$2" "missing file: $1"; fi
+}
+
+assert_contains() {
+    local file="$1" pattern="$2" label="$3"
+    if [ -f "$file" ] && grep -Fq -- "$pattern" "$file"; then pass "$label"
+    else fail "$label" "expected to find: $pattern" "in file: $file"; fi
+}
+
+assert_not_contains() {
+    local file="$1" pattern="$2" label="$3"
+    if [ -f "$file" ] && grep -Fq -- "$pattern" "$file"; then
+        fail "$label" "did not expect to find: $pattern" "in file: $file"
+    else pass "$label"; fi
+}
+
+# Every `superpowers:<name>` reference in a file names an existing skill directory.
+assert_skill_refs_resolve() {
+    local file="$1" label="$2" ok=1
+    [ -f "$file" ] || { fail "$label" "missing file: $file"; return; }
+    while IFS= read -r name; do
+        if [ ! -d "$SKILLS/$name" ]; then ok=0; echo "    unresolved skill reference: superpowers:$name"; fi
+    done < <(grep -o 'superpowers:[a-z-]*' "$file" | sed 's/superpowers://' | sort -u)
+    if [ "$ok" -eq 1 ]; then pass "$label"; else fail "$label" "in file: $file"; fi
+}
+
+# Every relative `.md` path in backticks resolves from the file's directory.
+assert_md_refs_resolve() {
+    local file="$1" label="$2" ok=1 dir
+    [ -f "$file" ] || { fail "$label" "missing file: $file"; return; }
+    dir="$(dirname "$file")"
+    while IFS= read -r ref; do
+        if [ ! -f "$dir/$ref" ]; then ok=0; echo "    unresolved path: $ref"; fi
+    done < <(grep -o '`[./a-z-]*\.md`' "$file" | tr -d '`' | sort -u)
+    if [ "$ok" -eq 1 ]; then pass "$label"; else fail "$label" "in file: $file"; fi
+}
+
+echo "=== Workflow Revision Structural Test ==="
+echo ""
+
+echo "-- reviewing-documents skill"
+assert_file "$REVIEWING_SKILL" "reviewing-documents/SKILL.md exists"
+assert_file "$RE_REVIEW_PROMPT" "reviewing-documents/re-review-prompt.md exists"
+assert_contains "$REVIEWING_SKILL" "name: reviewing-documents" "frontmatter name"
+assert_contains "$REVIEWING_SKILL" "description: Use when" "description starts with Use when"
+assert_md_refs_resolve "$REVIEWING_SKILL" "reviewing-documents references resolve"
+assert_contains "$RE_REVIEW_PROMPT" "[DIFF_FILE]" "re-review prompt takes a diff file"
+assert_contains "$RE_REVIEW_PROMPT" "NOT ADDRESSED" "re-review prompt returns per-finding verdicts"
+
+echo ""
+echo "-- reviewer prompt templates"
+assert_contains "$SPEC_PROMPT" "model:" "spec reviewer dispatch names a model"
+assert_contains "$PLAN_PROMPT" "model:" "plan reviewer dispatch names a model"
+assert_contains "$PLAN_PROMPT" "Tree verification" "plan reviewer checks the plan against the tree"
+
+echo ""
+echo "-- brainstorming"
+assert_skill_refs_resolve "$BRAINSTORMING" "brainstorming skill references resolve"
+assert_contains "$BRAINSTORMING" "superpowers:reviewing-documents" "brainstorming invokes reviewing-documents"
+assert_not_contains "$BRAINSTORMING" "Spec self-review" "brainstorming checklist has no inline self-review step"
+assert_not_contains "$BRAINSTORMING" "Spec Self-Review" "brainstorming prose has no inline self-review block"
+assert_contains "$BRAINSTORMING" "12 tasks" "brainstorming states the task-count threshold"
+# render-graphs.js exits 0 even when dot rejects a graph, so feed the block to dot directly.
+if command -v dot >/dev/null 2>&1; then
+    graph_file="$(mktemp)"
+    awk '/^```dot$/{on=1; next} /^```$/{on=0} on' "$BRAINSTORMING" > "$graph_file"
+    if [ -s "$graph_file" ] && dot -Tsvg -o /dev/null "$graph_file" 2>/dev/null; then
+        pass "brainstorming graph parses"
+    else
+        fail "brainstorming graph parses" "dot rejected the graph extracted from $BRAINSTORMING"
+    fi
+    rm -f "$graph_file"
+else
+    echo "  [SKIP] brainstorming graph parses (graphviz not installed)"
+fi
+
+echo ""
+echo "-- writing-plans"
+assert_skill_refs_resolve "$WRITING_PLANS" "writing-plans skill references resolve"
+assert_contains "$WRITING_PLANS" "superpowers:reviewing-documents" "writing-plans invokes reviewing-documents"
+assert_not_contains "$WRITING_PLANS" "## Self-Review" "writing-plans has no inline self-review section"
+assert_not_contains "$WRITING_PLANS" "subagent-driven-development (recommended)" "plan header no longer recommends SDD"
+assert_contains "$WRITING_PLANS" "12 tasks" "writing-plans states the task-count threshold"
+
+echo ""
+if [ "$failures" -gt 0 ]; then
+    echo "STATUS: FAILED ($failures failures)"
+    exit 1
+fi
+echo "STATUS: PASSED"
