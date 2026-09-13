@@ -59,7 +59,7 @@ digraph delegating_execution {
 
 ## 1. Write the brief
 
-Fill `brief-template.md` into `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.md`, with the same date and topic as the plan. Take the project's checks from its instructions file, set `[PLAN_LITERAL]` from the plan review (code present and verified against the tree, or not), and put this session's own name into `[PLANNING_SESSION]`: `ListAgents` prints it on its first line. Commit: `docs: add execution brief for <topic>`.
+Fill `brief-template.md` into `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.md`, with the same date and topic as the plan. Take the project's checks from its instructions file, set `[PLAN_LITERAL]` from the plan review (code present and verified against the tree, or not), and put this session's own name into `[PLANNING_SESSION]`: `ListAgents` prints it on its first line. Commit it (`docs: add execution brief for <topic>`) unless `git check-ignore -q <brief path>` exits 0, which means this project keeps `docs/superpowers/` out of history; the executor reads the brief from disk either way, because both sessions work in the same checkout.
 
 ## 2. Find the executor session
 

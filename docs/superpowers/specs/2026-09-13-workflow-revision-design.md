@@ -111,7 +111,11 @@ The skill returns to its caller, in prose:
 - the list of review notes, if any;
 - advice: Recommendations that were not applied and out-of-scope observations, for the human to read. The callers pass the advice on: brainstorming in its summary message, writing-plans with the handoff.
 
-### 5.8 Wording
+### 5.8 Documents under gitignore
+
+Some projects keep `docs/superpowers/` out of history. Before round 1 the skill runs `git check-ignore -q <document>`; when the path is ignored, commits are skipped, each revision is preceded by a snapshot copy of the document in the session's scratch directory, and the re-review diff is `diff -u <previous snapshot> <document>`. The brief and the executor report follow the same rule in `delegating-execution`: committed where tracked, left on disk otherwise, since both sessions read them from the same checkout.
+
+### 5.9 Wording
 
 The skill explains why the loop exists instead of ordering it: a fresh reviewer reads the document without the history of writing it and therefore notices what the author treats as obvious. Verification-style imperatives (`MUST`, `Do NOT rely on`) are not used in the new text; each rule carries its reason in the same sentence.
 

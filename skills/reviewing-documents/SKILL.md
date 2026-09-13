@@ -23,7 +23,7 @@ Repeated full reads do not converge: every fresh reader also brings a fresh set 
 digraph reviewing_documents {
     "Round 1: full review (named model)" [shape=box];
     "Issues Found?" [shape=diamond];
-    "Fix Issues; commit round N" [shape=box];
+    "Fix Issues; commit or snapshot round N" [shape=box];
     "Scoped re-review of the diff" [shape=box];
     "All addressed, no new breakage?" [shape=diamond];
     "Round 3 done?" [shape=diamond];
@@ -32,12 +32,12 @@ digraph reviewing_documents {
 
     "Round 1: full review (named model)" -> "Issues Found?";
     "Issues Found?" -> "Output: status, rounds, edits with class, notes, advice" [label="no"];
-    "Issues Found?" -> "Fix Issues; commit round N" [label="yes"];
-    "Fix Issues; commit round N" -> "Scoped re-review of the diff";
+    "Issues Found?" -> "Fix Issues; commit or snapshot round N" [label="yes"];
+    "Fix Issues; commit or snapshot round N" -> "Scoped re-review of the diff";
     "Scoped re-review of the diff" -> "All addressed, no new breakage?";
     "All addressed, no new breakage?" -> "Output: status, rounds, edits with class, notes, advice" [label="yes"];
     "All addressed, no new breakage?" -> "Round 3 done?" [label="no"];
-    "Round 3 done?" -> "Fix Issues; commit round N" [label="no"];
+    "Round 3 done?" -> "Fix Issues; commit or snapshot round N" [label="no"];
     "Round 3 done?" -> "Rule on each open item; write Review notes; commit" [label="yes"];
     "Rule on each open item; write Review notes; commit" -> "Output: status, rounds, edits with class, notes, advice";
 }
@@ -45,9 +45,13 @@ digraph reviewing_documents {
 
 ## Inputs
 
-- `document`: absolute path of the spec or plan. It is already committed.
+- `document`: absolute path of the spec or plan. It is saved, and committed where git tracks its path.
 - `kind`: `spec` or `plan`.
 - `spec` (plans only): absolute path of the spec the plan implements.
+
+## Documents under gitignore
+
+Some projects keep `docs/superpowers/` out of history on purpose. Before round 1, run `git check-ignore -q <document>`. Exit 0 means the path is ignored: skip every commit named below and, before each revision, copy the document into your scratch directory as that round's snapshot. The re-review diff is then `diff -u <previous snapshot> <document>` written to a file. The re-reviewer needs only the diff; whether the file lives in history is the project's choice.
 
 ## Model
 
@@ -63,7 +67,7 @@ Dispatch a fresh `general-purpose` subagent with the template for the kind:
 Both templates return `Status: Approved | Issues Found`, a list of `Issues` (blocking), and `Recommendations` (advisory). A report the harness marks as truncated is incomplete: ask the reviewer for the rest before acting on it, because the verdict and the last findings are what gets cut.
 
 - `Approved`: go to Output with zero edits. Any Recommendations go to the caller as advice; an approved document is not edited.
-- `Issues Found`: fix every Issue in the document. Apply a Recommendation only when it clearly improves the document, and only in this revision: a Recommendation on its own never starts a round, because rounds exist for defects that would mislead the next stage. Before editing, record the commit the reviewer read (`git rev-parse HEAD`); every re-review diffs from the commit its predecessor read. Then commit the revision: `docs: address <spec|plan> review round 1`.
+- `Issues Found`: fix every Issue in the document. Apply a Recommendation only when it clearly improves the document, and only in this revision: a Recommendation on its own never starts a round, because rounds exist for defects that would mislead the next stage. Before editing, record the commit the reviewer read (`git rev-parse HEAD`), or take the snapshot for an ignored path; every re-review diffs from what its predecessor read. Then commit the revision: `docs: address <spec|plan> review round 1` (tracked paths only).
 
 ## Rounds 2 and 3: scoped re-review
 
@@ -71,11 +75,11 @@ After each revision, dispatch a fresh subagent with `re-review-prompt.md`:
 
 - `[FINDINGS]`: the Issues from the previous round, verbatim.
 - `[DOCUMENT]`: `document`.
-- `[DIFF_FILE]`: the output of `git diff <commit the previous round reviewed> HEAD -- <document>`, written to a file in your scratch directory. Pass the path, not the text: a pasted diff stays in your context for the rest of the session.
+- `[DIFF_FILE]`: the output of `git diff <commit the previous round reviewed> HEAD -- <document>`, or `diff -u <previous snapshot> <document>` for an ignored path, written to a file in your scratch directory. Pass the path, not the text: a pasted diff stays in your context for the rest of the session.
 
 The re-reviewer verdicts each finding `ADDRESSED` or `NOT ADDRESSED` and lists `New breakage`: contradictions or placeholders that the revision itself introduced. It does not read untouched text for new findings; if it reports an observation outside the findings list anyway, pass it to the caller in Output as advice and leave the document alone, because writing it into the document would turn a taste remark into a stop for the human.
 
-When the re-reviewer returns `All findings addressed` and no new breakage, the loop is done: go to Output. Otherwise record HEAD, fix the open findings and the new breakage, commit (`docs: address <spec|plan> review round 2`), and re-review. Round 3 is the last re-review.
+When the re-reviewer returns `All findings addressed` and no new breakage, the loop is done: go to Output. Otherwise record HEAD or take a snapshot, fix the open findings and the new breakage, commit (`docs: address <spec|plan> review round 2`, tracked paths only), and re-review. Round 3 is the last re-review.
 
 ## The cap
 
@@ -84,7 +88,7 @@ Three rounds: one full review and two scoped re-reviews. When findings or new br
 - fix it now when the fix is small and clearly right;
 - otherwise leave it and record why.
 
-Write every ruling into the document under a final heading `## Review notes`, one bullet per open finding: the finding, the ruling, the reason. Only open findings and open new breakage go there; observations outside the findings list stay out of the document. Commit the fixes and the notes together (`docs: record <spec|plan> review notes`). The section travels with the document to your human partner and to whoever executes the plan, so a finding you overruled is still visible to them.
+Write every ruling into the document under a final heading `## Review notes`, one bullet per open finding: the finding, the ruling, the reason. Only open findings and open new breakage go there; observations outside the findings list stay out of the document. Commit the fixes and the notes together (`docs: record <spec|plan> review notes`) where the path is tracked. The section travels with the document to your human partner and to whoever executes the plan, so a finding you overruled is still visible to them.
 
 ## Output
 

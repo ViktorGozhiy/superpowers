@@ -70,7 +70,7 @@ Write `[REPORT_PATH]` as you go and finish it before you signal. Sections:
 - **Evidence:** the commands you ran for the project's checks and their final lines.
 - **Open questions:** anything the planning session has to decide.
 
-Commit the report yourself as the last commit, `docs: add execution report for [TOPIC]`. It is the one commit expected beyond the one per plan task, so the planning session finds the report in git and not only on disk.
+Commit the report yourself as the last commit, `docs: add execution report for [TOPIC]`. It is the one commit expected beyond the one per plan task, so the planning session finds the report in git and not only on disk. When `git check-ignore -q [REPORT_PATH]` exits 0, this project keeps planning documents out of history: leave the report on disk and say so in the completion message.
 
 ## Completion signal
 
