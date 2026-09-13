@@ -44,7 +44,7 @@ EXECUTING_PLANS="$SKILLS/executing-plans/SKILL.md"
 README="$REPO_ROOT/README.md"
 ```
 
-In `assert_graph_parses`, insert as the first line of the function body, before the `if ! command -v dot` line:
+In `assert_graph_parses`, insert this line after the `local file="$1" label="$2" graph_file` declaration and before the `if ! command -v dot` line (the `local` line has to come first, or `set -u` reports `file` as unbound):
 
 ```bash
     [ -f "$file" ] || { fail "$label" "missing file: $file"; return; }
@@ -636,7 +636,7 @@ Expected: one identity line whose two email fields are both the noreply address;
 
 - [ ] **Step 3: Whole-branch review of Part 2**
 
-Dispatch `superpowers:requesting-code-review` with `code-reviewer.md`, `model: opus`, `[BASE_SHA]` = the Part 2 plan commit (`git log --format=%H -1 -- docs/superpowers/plans/2026-09-13-workflow-revision-part-2-delegated-execution.md` before Task 7 changes anything else, currently `7f3a2b9`), so the diff holds only Part 2's implementation, `[HEAD_SHA]` = `HEAD`, a diff file as in `delegating-execution` step 4.3, and this plan's and the spec's paths. Fix Critical and Important findings, one commit per fix, then one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`. Record residual rulings in the probes file under a `## Validation notes` heading.
+Dispatch `superpowers:requesting-code-review` with `code-reviewer.md`, `model: opus`, `[BASE_SHA]` = the Part 2 plan commit (`git log --format=%H -1 -- docs/superpowers/plans/2026-09-13-workflow-revision-part-2-delegated-execution.md` run before Task 7 changes anything else; the plan file's last commit at the time of execution), so the diff holds only Part 2's implementation, `[HEAD_SHA]` = `HEAD`, a diff file as in `delegating-execution` step 4.3, and this plan's and the spec's paths. Fix Critical and Important findings, one commit per fix, then one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`. Record residual rulings in the probes file under a `## Validation notes` heading.
 
 - [ ] **Step 4: Push**
 
