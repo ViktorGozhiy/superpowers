@@ -124,6 +124,7 @@ assert_contains "$DELEGATING_SKILL" "ListAgents" "delegating-execution discovers
 assert_contains "$DELEGATING_SKILL" "docs/superpowers/briefs/" "delegating-execution names the brief location"
 assert_contains "$BRIEF_TEMPLATE" "[PLANNING_SESSION]" "brief template carries the planning session name"
 assert_contains "$BRIEF_TEMPLATE" "[REPORT_PATH]" "brief template carries the report path"
+assert_skill_refs_resolve "$BRIEF_TEMPLATE" "brief template skill references resolve"
 assert_graph_parses "$DELEGATING_SKILL" "delegating-execution graph parses"
 
 echo ""
@@ -142,6 +143,13 @@ echo "-- executing-plans and README"
 assert_skill_refs_resolve "$EXECUTING_PLANS" "executing-plans skill references resolve"
 assert_not_contains "$EXECUTING_PLANS" "instead of this skill" "executing-plans no longer defers to subagent-driven development"
 assert_contains "$EXECUTING_PLANS" "superpowers:requesting-code-review" "executing-plans runs the whole-branch review"
+if [ -f "$EXECUTING_PLANS" ] && [ "$(grep -n "^### Step 3: Review the Whole Branch" "$EXECUTING_PLANS" | cut -d: -f1)" -lt "$(grep -n "^### Step 4: Complete Development" "$EXECUTING_PLANS" | cut -d: -f1)" ] 2>/dev/null; then
+    pass "executing-plans reviews the branch before completing"
+else
+    fail "executing-plans reviews the branch before completing" "expected Step 3 (review) before Step 4 (complete) in $EXECUTING_PLANS"
+fi
+assert_contains "$SKILLS/requesting-code-review/code-reviewer.md" "[DIFF_FILE]" "code reviewer template takes a diff file"
+assert_contains "$SKILLS/requesting-code-review/code-reviewer.md" "model: [MODEL]" "code reviewer template names a model"
 assert_contains "$README" "## About this fork" "README describes the fork"
 assert_contains "$README" "**reviewing-documents**" "README lists reviewing-documents"
 assert_contains "$README" "**delegating-execution**" "README lists delegating-execution"

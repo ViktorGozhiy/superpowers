@@ -7,6 +7,7 @@ Use this template when dispatching a code reviewer subagent.
 ```
 Subagent (general-purpose):
   description: "Review code changes"
+  model: [MODEL]
   prompt: |
     You are a Senior Code Reviewer with expertise in software architecture,
     design patterns, and best practices. Your job is to review completed work
@@ -24,6 +25,10 @@ Subagent (general-purpose):
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
+    **Diff file:** [DIFF_FILE]
+
+    Read the diff file once — it holds the commit list, the stat summary, and
+    the diff with context. If it is missing, fetch the diff yourself:
 
     ```bash
     git diff --stat [BASE_SHA]..[HEAD_SHA]
@@ -135,10 +140,12 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
+- `[MODEL]` — name it on every dispatch; an omitted model inherits the session's, usually the most expensive one. The dispatching skill says which tier.
 - `[DESCRIPTION]` — brief summary of what was built
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
+- `[DIFF_FILE]` — path of a file holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for the range; a pasted diff would stay in the dispatcher's context for the rest of the session
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 

@@ -11,8 +11,8 @@ The planning session hands a reviewed plan to a second interactive session that 
 
 ## Why a second session
 
-- The executor runs on the model your partner chose when launching it, usually a cheaper one than this session's. The planning model's budget is what delegation protects.
-- Your partner sees a full interactive terminal and can step in, which neither a background subagent nor a headless run gives them.
+- The executor runs on the model your human partner chose when launching it; that choice is their lever on cost, and the planning model's budget is what delegation protects.
+- Your human partner sees a full interactive terminal and can step in, which neither a background subagent nor a headless run gives them.
 - Execution never enters this session's context, so the validation at the end reads the branch with fresh eyes.
 
 ## The flow
@@ -29,8 +29,10 @@ digraph delegating_execution {
     "Critical or Important findings?" [shape=diamond];
     "Send findings to executor; one fix round; scoped re-review" [shape=box];
     "Record residuals in report: Validation notes" [shape=box];
+    "Release the executor; partner closes it" [shape=box];
     "superpowers:finishing-a-development-branch" [shape=doublecircle];
-    "Idle notice or blocked without report: summarize; ask relaunch or inline" [shape=box];
+    "Idle notice or blocked without report: summarize; ask relaunch or inline" [shape=diamond];
+    "Finish remaining tasks here (executing-plans)" [shape=doublecircle];
 
     "Write and commit the brief" -> "Find the executor session (ListAgents)";
     "Find the executor session (ListAgents)" -> "Send the brief; subscribe to the idle notice";
@@ -40,17 +42,20 @@ digraph delegating_execution {
     "Completion message?" -> "Idle notice or blocked without report: summarize; ask relaunch or inline" [label="blocked / idle / expired"];
     "Read report; run project checks" -> "Whole-branch review (named model, diff file)";
     "Whole-branch review (named model, diff file)" -> "Critical or Important findings?";
-    "Critical or Important findings?" -> "superpowers:finishing-a-development-branch" [label="no"];
+    "Critical or Important findings?" -> "Release the executor; partner closes it" [label="no"];
     "Critical or Important findings?" -> "Send findings to executor; one fix round; scoped re-review" [label="yes"];
     "Send findings to executor; one fix round; scoped re-review" -> "Record residuals in report: Validation notes";
-    "Record residuals in report: Validation notes" -> "superpowers:finishing-a-development-branch";
+    "Record residuals in report: Validation notes" -> "Release the executor; partner closes it";
+    "Release the executor; partner closes it" -> "superpowers:finishing-a-development-branch";
+    "Idle notice or blocked without report: summarize; ask relaunch or inline" -> "Write and commit the brief" [label="relaunch"];
+    "Idle notice or blocked without report: summarize; ask relaunch or inline" -> "Finish remaining tasks here (executing-plans)" [label="inline"];
 }
 ```
 
 ## Preconditions
 
 - The plan and the spec are committed on the feature branch and the plan has passed `superpowers:reviewing-documents`.
-- Your partner has said that a second session is running in the repository directory. You do not choose its model; they did when they launched it.
+- Your human partner has said that a second session is running in the directory this session works in (a worktree, when the workflow created one; the handoff message named that directory). You do not choose its model; they did when they launched it.
 
 ## 1. Write the brief
 
@@ -58,7 +63,7 @@ Fill `brief-template.md` into `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.
 
 ## 2. Find the executor session
 
-Run `ListAgents`. After this session's own name it lists reachable sessions, one row each: `name [ref]`, busy or idle, start time. Session names derive from the working directory, so choose the most recently started idle session whose name begins with the repository directory's name. When more than one qualifies, ask your partner which one; when two rows share a name, address the chosen one with its `[ref]`.
+Run `ListAgents`. After this session's own name it lists reachable sessions, one row each: `name [ref]`, busy or idle, start time. Session names derive from the working directory, so choose the most recently started idle session whose name begins with the basename of the directory this session works in. When more than one qualifies, or none does (the new session may still be busy starting), ask your human partner which one; when two rows share a name, address the chosen one with its `[ref]`.
 
 ## 3. Hand over
 
@@ -68,24 +73,25 @@ Call `SendMessage` with `to` set to the executor's name, `notify_when_idle: true
 
 `notify_when_idle` subscribes, in the same call, to one notice when the executor next goes idle or exits. It is one-shot, works for sessions on this machine, and only from the main conversation, not from a subagent.
 
-Then wait. Leave the working tree alone until the executor has reported: two sessions editing one checkout race each other's builds. Do not poll `ListAgents` and do not send "are you done" messages; your partner is watching the executor's terminal, and the messages below reach you on their own.
+Then wait, which means: end your turn. The executor's message starts a new turn in this session when it arrives; a `sleep` loop or a monitor would spend your budget for nothing. Leave the working tree alone until the executor has reported: two sessions editing one checkout race each other's builds. Do not poll `ListAgents` and do not send "are you done" messages; your human partner is watching the executor's terminal, and the messages below reach you on their own.
 
 - The completion message arrives as `<cross-session-message from="…">` with a first line `Execution done: <report path>` or `Execution blocked: <report path>`. To reply, copy its `from` into `to`.
-- The `[Cross-session idle notice]` is the fallback for a run that ended without reporting; a notice saying the subscription expired is handled the same way (section 5).
+- The `[Cross-session idle notice]` is the fallback for a run that ended without reporting; a notice saying the subscription expired is handled the same way (section 5). When this session holds peer messages for approval, the notice is shown to your human partner instead of you; they will tell you.
 
-On a harness without `ListAgents` and `SendMessage`, say so and ask your partner to paste the brief into the executor and to tell you when it reports.
+On a harness without `ListAgents` and `SendMessage`, say so and ask your human partner to paste the brief into the executor and to tell you when it reports.
 
 ## 4. Validate
 
-1. Read the report. Every plan task has a commit; every deviation has a reason. A missing commit or an unexplained deviation is a finding for step 4.
+1. Read the report. Every plan task has a commit; every deviation has a reason. A missing commit or an unexplained deviation joins the findings list you send in item 4 below.
 2. Run the project's full checks yourself (build and tests), or dispatch one subagent that runs them and returns only the final lines.
-3. Dispatch the whole-branch review with `superpowers:requesting-code-review` and its `../requesting-code-review/code-reviewer.md`. Name the model: the same default as document reviews, one tier below this session's model with `opus` as the floor (see `../reviewing-documents/SKILL.md`). This deliberately differs from subagent-driven-development, which puts its final review on the most capable model: here the most capable model is this session's, and its budget is what delegation protects. Hand the reviewer a diff file, not pasted text: `git log --oneline <merge-base>..HEAD`, `git diff --stat <merge-base>..HEAD`, and `git diff -U10 <merge-base>..HEAD` written to one file in your scratch directory, where `<merge-base>` is `git merge-base <main branch> HEAD`. Give it the plan path, the report path, and the plan's `## Review notes` if any.
-4. When the review returns Critical or Important findings, send the complete list to the executor in one `SendMessage` call with `notify_when_idle: true`: its context is intact and it fixes cheaper than you would. Ask it to append a fix report to the same report file and to signal `Execution done` again. Then run one scoped re-review with `../subagent-driven-development/re-review-prompt.md`, filling its placeholders as follows: `[MODEL]` the same model as step 3; `[BRIEF_FILE]` the executor brief; `[FINDINGS]` the findings you sent, verbatim; `[REPORT_FILE]` the executor report with the fix report appended; `[FIX_BASE_SHA]` HEAD at the time of the whole-branch review; `[HEAD_SHA]` HEAD after the fixes; `[DIFF_FILE]` a file holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for that range. SDD's `scripts/review-package` is not used because it writes into SDD's per-plan workspace. One fix round only: adjudicate whatever remains and record each ruling in the report under `## Validation notes`, so a decision you took reaches your partner.
-5. Invoke `superpowers:finishing-a-development-branch` from this session: it holds the dialogue context, so it presents the options and opens the pull request.
+3. Dispatch the whole-branch review with `superpowers:requesting-code-review` and its `../requesting-code-review/code-reviewer.md`. Fill `[MODEL]` with the same default as document reviews, one tier below this session's model with `opus` as the floor (see `../reviewing-documents/SKILL.md`). This deliberately differs from subagent-driven-development, which puts its final review on the most capable model: here the most capable model is this session's, and its budget is what delegation protects. Fill `[DIFF_FILE]` with a file, not pasted text: `git log --oneline <merge-base>..HEAD`, `git diff --stat <merge-base>..HEAD`, and `git diff -U10 <merge-base>..HEAD` written to one file in your scratch directory, where `<merge-base>` is `git merge-base <main branch> HEAD`. Give it the plan path, the report path, and the plan's `## Review notes` if any.
+4. When the review returns Critical or Important findings, send the complete list to the executor in one `SendMessage` call with `notify_when_idle: true`: its context is intact and it fixes cheaper than you would. Ask it to append a fix report to the same report file and to signal `Execution done` again. Then run one scoped re-review with `../subagent-driven-development/re-review-prompt.md`, filling its placeholders as follows: `[MODEL]` the same model as item 3; `[BRIEF_FILE]` the executor brief; `[FINDINGS]` the findings you sent, verbatim, preceded by one line saying that this is the fix round of a whole-branch review, so the template's "one task" and "a broad review happens later" sentences do not apply and out-of-scope observations come back to you; `[REPORT_FILE]` the executor report with the fix report appended; `[FIX_BASE_SHA]` HEAD at the time of the whole-branch review; `[HEAD_SHA]` HEAD after the fixes; `[DIFF_FILE]` a file holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for that range. SDD's `scripts/review-package` is not used because it writes into SDD's per-plan workspace. One fix round only: adjudicate whatever remains and record each ruling in the report under `## Validation notes`, so a decision you took reaches your human partner.
+5. Release the executor: send it one message saying the branch is validated and it can stop, and ask your human partner to close that session. finishing-a-development-branch may remove the worktree the executor sits in, so the executor has to be gone first.
+6. Invoke `superpowers:finishing-a-development-branch` from this session: it holds the dialogue context, so it presents the options and executes the choice.
 
 ## 5. When the executor stops without reporting
 
-An idle notice or an expired subscription with no completion message, or a message starting `Execution blocked`: read `git log` on the branch and whatever the report holds, summarize the state to your partner in a few lines, and ask which they prefer:
+An idle notice or an expired subscription with no completion message, or a message starting `Execution blocked`: read `git log` on the branch and whatever the report holds, summarize the state to your human partner in a few lines, and ask which they prefer:
 
 - relaunch: they open a fresh session, you write a brief whose `## What to build` names the remaining tasks and the last good commit, and you hand over again;
 - inline: you finish the remaining tasks here with `superpowers:executing-plans`.
@@ -94,7 +100,7 @@ An idle notice or an expired subscription with no completion message, or a messa
 
 | Excuse | Reality |
 |--------|---------|
-| "I'll just execute it here, the second session is overhead" | Your partner asked for delegation because your model is the expensive one and your context is for validation. Inline is theirs to choose, with the word "inline". |
+| "I'll just execute it here, the second session is overhead" | Your human partner asked for delegation because your model is the expensive one and your context is for validation. Inline is theirs to choose, with the word "inline". |
 | "I'll check the executor's progress with ListAgents every minute" | Polling spends your turns for nothing; the completion message and the idle notice arrive on their own. |
 | "The executor is done, I'll fix the review findings myself" | The executor holds the context of the code it wrote and fixes cheaper. One message, one fix round. |
 | "The plan was literal, the whole-branch review can be skipped" | The review is what turns "matches the plan" into "and the plan's own mistakes are fixed". It runs in both execution modes. |

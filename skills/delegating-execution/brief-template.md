@@ -26,17 +26,21 @@ Read this file first; it is your requirements. Then read the plan and the spec.
 
 ## Method
 
-Choose the method that is most effective for you: inline, subagents, or a mix.
-Plan is literal (code present, verified against the tree): [PLAN_LITERAL].
+Choose the method that is most effective for you: inline with
+`superpowers:executing-plans`, subagents with `superpowers:subagent-driven-development`,
+or a mix. Plan is literal (code present, verified against the tree): [PLAN_LITERAL].
 When it is, transcription plus tests is enough and a review per task adds little.
-When it is not, `superpowers:subagent-driven-development` gives each task its own
-review gate. Either way, superpowers:test-driven-development applies to every task.
+When it is not, subagent-driven development gives each task its own review gate.
+Whichever you use, stop after the last plan task's commit: the whole-branch review
+and finishing-a-development-branch belong to the planning session (see Hard limits),
+so skip those steps of the skill you chose.
 
 ## Non-negotiables
 
+- superpowers:test-driven-development on every task: the failing test comes first.
 - One green commit per plan task, in plan order, with the plan's commit message.
 - The project's checks pass before each commit:
-[PROJECT_CHECKS]
+  [PROJECT_CHECKS]
 - Follow the project's instructions file for conventions and mechanics.
 - Any reviewer you dispatch works in a git worktree, never in this working tree:
   a reviewer that edits files here races your own build.
@@ -47,6 +51,7 @@ review gate. Either way, superpowers:test-driven-development applies to every ta
 - No edits outside the plan's file map unless the code forces it; record every such edit under Deviations.
 - No destructive operations: no history rewrites, no resets that drop work, no deletions the plan does not name.
 - No other branches; no changes to the planning documents.
+- No whole-branch review and no finishing-a-development-branch from this session: the planning session runs both after your report, and a second review here would pay for the same reading twice.
 
 ## When the code disagrees with the plan
 

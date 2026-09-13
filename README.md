@@ -45,7 +45,13 @@ There's a bunch more to it, but that's the core of the system. And because the s
 
 ## About this fork
 
-This fork tracks upstream Superpowers and changes three things in the workflow. Specs and plans are reviewed by fresh subagents on an explicitly named model in a bounded loop (`reviewing-documents`: one full review, scoped re-reviews of the fixes, three rounds, then recorded rulings). After the spec review, brainstorming continues to writing-plans on its own when the review changed nothing the human agreed to, and stops with an "agreed / now" comparison when it did. Execution is delegated by default to a second interactive session that the human opens and watches (`delegating-execution`), with the planning session validating the result; inline execution stays available on request, and subagent-driven development stays in the library for the executor to choose. The design is in `docs/superpowers/specs/2026-09-13-workflow-revision-design.md`. "How it works" above describes upstream's flow; in this fork the step after "go" is the handoff described here. The `team-design` branch holds an earlier, archived experiment with role-based design sessions.
+This fork tracks upstream Superpowers and changes three things in the workflow. "How it works" above describes upstream's flow; in this fork the step after "go" is the handoff described below.
+
+- **Document review by fresh subagents.** Specs and plans are reviewed on an explicitly named model in a bounded loop (`reviewing-documents`: one full review, scoped re-reviews of the fixes, three rounds, then recorded rulings).
+- **Automatic spec-to-plan transition.** After the spec review, brainstorming continues to writing-plans on its own when the review changed nothing the human agreed to, and stops with an "agreed / now" comparison when it did.
+- **Delegated execution.** By default the plan goes to a second interactive session that the human opens and watches (`delegating-execution`), and the planning session validates the result. Inline execution stays available on request; subagent-driven development stays in the library for the executor to choose.
+
+The design is in `docs/superpowers/specs/2026-09-13-workflow-revision-design.md`. The `team-design` branch holds an earlier, archived experiment with role-based design sessions.
 
 ## Commercial Services
 

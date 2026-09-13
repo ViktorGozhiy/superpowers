@@ -32,7 +32,7 @@ For each task:
 
 ### Step 3: Review the Whole Branch
 
-After all tasks complete and verified, dispatch one reviewer with fresh context over the whole branch: use superpowers:requesting-code-review with its `code-reviewer.md`, name the model (one tier below this session's model, `opus` as the floor, as in `../reviewing-documents/SKILL.md`), and hand it a diff file from `git merge-base <main branch> HEAD` to `HEAD` instead of pasted text. You wrote every commit on this branch, so you read them the way you meant them; the reviewer reads what is there. Fix Critical and Important findings, commit each fix, and re-run the project's checks. Note Minor findings for your human partner.
+After all tasks complete and verified, dispatch one reviewer with fresh context over the whole branch: use superpowers:requesting-code-review with its `code-reviewer.md`, fill `[MODEL]` with one tier below this session's model (`opus` as the floor, as in `../reviewing-documents/SKILL.md`), and fill `[DIFF_FILE]` with a file holding the diff from `git merge-base <main branch> HEAD` to `HEAD` instead of pasted text. When a brief from delegating-execution told you to stop after the last task, skip this step and the next: the planning session runs them. You wrote every commit on this branch, so you read them the way you meant them; the reviewer reads what is there. Fix Critical and Important findings, commit each fix, and re-run the project's checks. Note Minor findings for your human partner.
 
 ### Step 4: Complete Development
 

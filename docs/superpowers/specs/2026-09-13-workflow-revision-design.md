@@ -25,7 +25,7 @@ A secondary goal is cost: the planning session runs on the most capable model, a
 
 ## 3. Non-goals
 
-- No change to subagent-driven-development, requesting-code-review, test-driven-development, systematic-debugging, or any skill not named below. SDD stays in the repository as a tool an executor session may choose; it leaves the writing-plans handoff.
+- No change to subagent-driven-development, test-driven-development, systematic-debugging, or any skill not named below. requesting-code-review's `code-reviewer.md` template gains a `[MODEL]` line and a `[DIFF_FILE]` slot (10.4), because both execution modes dispatch it with a named model and a diff file; the skill's process text is unchanged. SDD stays in the repository as a tool an executor session may choose; it leaves the writing-plans handoff.
 - No agent-teams feature. Cross-session messaging, a documented and default-on Claude Code feature (tools `ListAgents` and `SendMessage`; https://code.claude.com/docs/en/cross-session-messaging), is enough for one executor that reports at the end.
 - No project-specific mechanics (line-length rules, formatter behaviour) in the reviewer prompts. Those belong to the project's instructions file, which reviewers and executors read.
 - No blanket rewrite of imperative wording across the skill library. Only the blocks this revision replaces are rewritten in positive, motivated form.
@@ -44,6 +44,7 @@ A secondary goal is cost: the planning session runs on the most capable model, a
 | `skills/writing-plans/SKILL.md` | Self-Review replaced by the review skill; task-count check; plan header no longer recommends SDD; Execution Handoff rewritten for two modes. |
 | `skills/writing-plans/plan-document-reviewer-prompt.md` | New check: verify referenced files and symbols against the repository tree. Dispatch example names the model. |
 | `skills/executing-plans/SKILL.md` | Remove the "use SDD instead" note; add the whole-branch review before finishing. |
+| `skills/requesting-code-review/code-reviewer.md` | Dispatch example names `[MODEL]`; the range section takes `[DIFF_FILE]` with the git commands as fallback. |
 | `README.md` | Short section describing how this fork differs from upstream. |
 
 Everything else in the repository is unchanged.
@@ -177,14 +178,14 @@ Subagent-driven development is not offered here. The plan header still names it 
 ### 8.1 Preconditions
 
 - The plan and spec are committed on the feature branch.
-- A second interactive session is running in the repository directory. The human opened it and chose its model; the planning session does not control the executor's model.
+- A second interactive session is running in the directory the planning session works in: a worktree when the workflow created one, otherwise the repository root. The handoff message names that directory explicitly (from `pwd`), because the repository root may have another branch checked out. The human opened the session and chose its model; the planning session does not control the executor's model.
 
 ### 8.2 Brief
 
 The controller writes `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.md` from `brief-template.md` and commits it. The brief contains:
 
 - paths of the plan, the spec, and the acceptance criteria (a section of the spec or an issue reference);
-- **method:** the executor chooses inline, subagents, or a mix. One hint: when the plan carries the code and was verified against the tree, transcription with tests is enough and per-task review adds little; when the plan is descriptive, `superpowers:subagent-driven-development` gives each task its own review;
+- **method:** the executor chooses inline (`executing-plans`), subagents (`subagent-driven-development`), or a mix, and stops after the last plan task's commit: the whole-branch review and finishing-a-development-branch belong to the planning session, so the executor skips those steps of whichever skill it uses. One hint: when the plan carries the code and was verified against the tree, transcription with tests is enough and per-task review adds little; when the plan is descriptive, `superpowers:subagent-driven-development` gives each task its own review;
 - **non-negotiables:** TDD; one green commit per task; the project's quality gates and instructions file; reviewers that the executor dispatches work in a git worktree, never in the shared tree;
 - **hard limits:** no push, no PR, no edits outside the plan's file map unless the code forces it, no destructive operations, no other branches;
 - **deviations:** when the code disagrees with the plan, the executor follows the code, records the deviation and its reason in the report, and continues;
@@ -193,9 +194,9 @@ The controller writes `docs/superpowers/briefs/YYYY-MM-DD-<topic>-brief.md` from
 
 ### 8.3 Handing over
 
-1. Run `ListAgents`. Its output starts with this session's own name and then lists reachable sessions, one row each: `name [ref]`, busy or idle, start time. Session names derive from the working directory. Choose the most recently started idle session whose name begins with the repository directory name. If more than one qualifies, ask the human which one; when two rows share a name, address the chosen one with its `[ref]`.
+1. Run `ListAgents`. Its output starts with this session's own name and then lists reachable sessions, one row each: `name [ref]`, busy or idle, start time. Session names derive from the working directory. Choose the most recently started idle session whose name begins with the basename of the planning session's working directory. If more than one qualifies, or none does, ask the human which one; when two rows share a name, address the chosen one with its `[ref]`.
 2. Call `SendMessage` with `to` set to that session name, `notify_when_idle: true`, and `message` set to one paragraph: read the brief at `<path>` first, it is the requirements; report back as the brief describes; the planning session's name (from step 1) to report to. The brief itself repeats that name in its completion-signal section. `notify_when_idle` subscribes in the same call to one idle notice from the executor; it is one-shot, works only for sessions on this machine, and only from the main conversation, not from a subagent.
-3. Wait. The executor's completion message arrives as `<cross-session-message from="…">`; a reply copies its `from` into `to`. The completion message is the primary signal. The `[Cross-session idle notice]` is the fallback for a run that ended without reporting; a notice that says the subscription expired is handled the same way (8.5). On a harness without an equivalent of these tools, the skill says so and the human relays the completion by hand.
+3. Wait, which means end the turn: the executor's message starts a new turn when it arrives, and a sleep or monitor loop would spend budget for nothing. The completion message arrives as `<cross-session-message from="…">`; a reply copies its `from` into `to`. The completion message is the primary signal. The `[Cross-session idle notice]` is the fallback for a run that ended without reporting; a notice that says the subscription expired is handled the same way (8.5). On a harness without an equivalent of these tools, the skill says so and the human relays the completion by hand.
 4. Do not touch the working tree while the executor runs. The human watches the executor's terminal.
 
 ### 8.4 Validation
@@ -206,7 +207,8 @@ On the completion message:
 2. Run the project's full verification (build and tests) from the planning session, or via one subagent that reports only the summary.
 3. Dispatch a whole-branch review: `superpowers:requesting-code-review` with `code-reviewer.md`, on the same explicit mid-tier model as document reviews (5.3), with the branch diff from `git merge-base main HEAD` to `HEAD` written to a file, plus the plan's and report's paths and any review notes. This deliberately differs from subagent-driven-development, which puts its final review on the most capable model: here the most capable model is the planning session's, and its budget is what delegation protects. SDD keeps its own rule; the two skills are entered from different handoffs and do not run together.
 4. If the review returns Critical or Important findings, send the complete list to the executor session in one `SendMessage` call with `notify_when_idle: true`: its context is intact and it fixes cheaper than the planning session would. Then run one scoped re-review of the fix range with `subagent-driven-development/re-review-prompt.md`, the code counterpart of the document re-review, filling its placeholders as follows: `[MODEL]` is the same mid-tier model as in step 3; `[BRIEF_FILE]` is the executor brief; `[REPORT_FILE]` is the executor report, to which the executor appends its fix report; `[FIX_BASE_SHA]` is HEAD at the time of the whole-branch review; `[HEAD_SHA]` is HEAD after the fixes; `[DIFF_FILE]` is a file in the session's scratch directory holding `git log --oneline`, `git diff --stat`, and `git diff -U10` for that range. This is the manual form that SDD documents; `scripts/review-package` is not used because it writes into SDD's per-plan workspace. One fix round only; residual findings are adjudicated and recorded in the report under `## Validation notes`.
-5. Invoke `superpowers:finishing-a-development-branch` from the planning session, which holds the dialogue context.
+5. Release the executor: one message saying the branch is validated and it can stop; the human closes that session before the branch is finished, because finishing may remove the worktree the executor sits in.
+6. Invoke `superpowers:finishing-a-development-branch` from the planning session, which holds the dialogue context.
 
 ### 8.5 Failure handling
 
@@ -238,6 +240,10 @@ Content unchanged. The dispatch example names `model` explicitly.
 ### 10.3 `reviewing-documents/re-review-prompt.md` (new)
 
 Inputs: findings list, document path, diff file path. Output per finding: `ADDRESSED` / `NOT ADDRESSED` + reason; `New breakage:` list or `none`. Scope statement with reason as in 5.5. Calibration: only contradictions and placeholders introduced by the diff count as new breakage.
+
+### 10.4 `requesting-code-review/code-reviewer.md`
+
+The dispatch example gains `model: [MODEL]`, and the "Git Range to Review" section gains `**Diff file:** [DIFF_FILE]` with the existing git commands kept as the fallback when the file is missing. Both new placeholders are documented in the Placeholders list. Nothing else in the template or in the skill changes.
 
 ## 11. README
 
