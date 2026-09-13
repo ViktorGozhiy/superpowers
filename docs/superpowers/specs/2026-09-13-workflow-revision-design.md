@@ -1,7 +1,7 @@
 # Workflow Revision: Document Review Loop, Automatic Spec-to-Plan Transition, Delegated Execution
 
 **Date:** 2026-09-13
-**Status:** Approved in dialogue, pending spec review
+**Status:** Approved; spec review passed in two rounds on 2026-09-13
 **Base:** superpowers v6.3.0
 
 ## 1. Motivation

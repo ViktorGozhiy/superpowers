@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Repository root: `/home/viktor/.claude-homes/work/.claude/plugins/marketplaces/superpowers-dev`, branch `workflow-revision`. All paths below are relative to it.
+- Repository: the fork checkout, branch `workflow-revision`. All paths below are relative to its root.
 - Git identity is repo-local and already set; every commit must show `30889176+ViktorGozhiy@users.noreply.github.com` as author and committer. Check with `git log --format='%ae %ce' -1` after each commit.
 - No personal data in file content: no surnames, no employer domains, no work email addresses.
 - Reviewer model default, verbatim: "one tier below the model this session runs on, with `opus` as the floor".
@@ -975,7 +975,7 @@ git log --format='%an %ae %cn %ce' origin/main..HEAD | sort -u
 grep -rIniE 'hozhyi|gozhiy|schoolday|gg4l' . --exclude-dir=.git | grep -v 'users.noreply.github.com' || echo "no personal data"
 ```
 
-Expected: one identity line containing only the noreply address; `no personal data`.
+Expected: one identity line whose two email fields are both the noreply address (the author name stays as it is on the GitHub profile); `no personal data`.
 
 - [ ] **Step 4: Dispatch the whole-branch review**
 

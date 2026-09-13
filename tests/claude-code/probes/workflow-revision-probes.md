@@ -80,7 +80,7 @@ in a throwaway fixture repository (one ESM file `src/greet.js`, one spec per pro
 - The session created a branch `wip/contradiction-spec-review` for its commits because the fixture had no task branch.
 - Cost and time: USD 1.27, 216 s, 15 turns.
 
-**Verdict:** matches the spec (5.5, 5.6, 5.7). The round 3 re-reviewer added one advisory observation beyond the findings list; it was recorded as a review note rather than starting a fourth round, which is the intended handling.
+**Verdict:** matches the spec (5.5, 5.6, 5.7) except for one point: the round 3 re-reviewer added an advisory observation outside the findings list and the session wrote it into `## Review notes`. The skill text at the time did not say what to do with such observations; it now says they go to the caller as advice and stay out of the document, because every review note stops the workflow for the human.
 
 ## Summary
 
