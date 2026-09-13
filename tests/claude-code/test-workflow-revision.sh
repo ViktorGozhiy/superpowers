@@ -15,6 +15,10 @@ BRAINSTORMING="$SKILLS/brainstorming/SKILL.md"
 WRITING_PLANS="$SKILLS/writing-plans/SKILL.md"
 SPEC_PROMPT="$SKILLS/brainstorming/spec-document-reviewer-prompt.md"
 PLAN_PROMPT="$SKILLS/writing-plans/plan-document-reviewer-prompt.md"
+DELEGATING_SKILL="$SKILLS/delegating-execution/SKILL.md"
+BRIEF_TEMPLATE="$SKILLS/delegating-execution/brief-template.md"
+EXECUTING_PLANS="$SKILLS/executing-plans/SKILL.md"
+README="$REPO_ROOT/README.md"
 
 failures=0
 
@@ -93,6 +97,7 @@ assert_contains "$BRAINSTORMING" "12 tasks" "brainstorming states the task-count
 # render-graphs.js exits 0 even when dot rejects a graph, so feed the block to dot directly.
 assert_graph_parses() {
     local file="$1" label="$2" graph_file
+    [ -f "$file" ] || { fail "$label" "missing file: $file"; return; }
     if ! command -v dot >/dev/null 2>&1; then echo "  [SKIP] $label (graphviz not installed)"; return; fi
     graph_file="$(mktemp)"
     awk '/^```dot$/{on=1; next} /^```$/{on=0} on' "$file" > "$graph_file"
@@ -107,12 +112,39 @@ assert_graph_parses "$BRAINSTORMING" "brainstorming graph parses"
 assert_graph_parses "$REVIEWING_SKILL" "reviewing-documents graph parses"
 
 echo ""
+echo "-- delegating-execution skill"
+assert_file "$DELEGATING_SKILL" "delegating-execution/SKILL.md exists"
+assert_file "$BRIEF_TEMPLATE" "delegating-execution/brief-template.md exists"
+assert_contains "$DELEGATING_SKILL" "name: delegating-execution" "delegating frontmatter name"
+assert_contains "$DELEGATING_SKILL" "description: Use when" "delegating description starts with Use when"
+assert_skill_refs_resolve "$DELEGATING_SKILL" "delegating-execution skill references resolve"
+assert_md_refs_resolve "$DELEGATING_SKILL" "delegating-execution references resolve"
+assert_contains "$DELEGATING_SKILL" "notify_when_idle" "delegating-execution subscribes to the idle notice"
+assert_contains "$DELEGATING_SKILL" "ListAgents" "delegating-execution discovers sessions with ListAgents"
+assert_contains "$DELEGATING_SKILL" "docs/superpowers/briefs/" "delegating-execution names the brief location"
+assert_contains "$BRIEF_TEMPLATE" "[PLANNING_SESSION]" "brief template carries the planning session name"
+assert_contains "$BRIEF_TEMPLATE" "[REPORT_PATH]" "brief template carries the report path"
+assert_graph_parses "$DELEGATING_SKILL" "delegating-execution graph parses"
+
+echo ""
 echo "-- writing-plans"
 assert_skill_refs_resolve "$WRITING_PLANS" "writing-plans skill references resolve"
 assert_contains "$WRITING_PLANS" "superpowers:reviewing-documents" "writing-plans invokes reviewing-documents"
 assert_not_contains "$WRITING_PLANS" "## Self-Review" "writing-plans has no inline self-review section"
 assert_not_contains "$WRITING_PLANS" "subagent-driven-development (recommended)" "plan header no longer recommends SDD"
 assert_contains "$WRITING_PLANS" "12 tasks" "writing-plans states the task-count threshold"
+assert_not_contains "$WRITING_PLANS" "Subagent-Driven (recommended)" "handoff no longer offers subagent-driven development"
+assert_contains "$WRITING_PLANS" "superpowers:delegating-execution" "handoff routes to delegating-execution"
+assert_contains "$WRITING_PLANS" "superpowers:executing-plans" "handoff keeps inline execution"
+
+echo ""
+echo "-- executing-plans and README"
+assert_skill_refs_resolve "$EXECUTING_PLANS" "executing-plans skill references resolve"
+assert_not_contains "$EXECUTING_PLANS" "instead of this skill" "executing-plans no longer defers to subagent-driven development"
+assert_contains "$EXECUTING_PLANS" "superpowers:requesting-code-review" "executing-plans runs the whole-branch review"
+assert_contains "$README" "## About this fork" "README describes the fork"
+assert_contains "$README" "**reviewing-documents**" "README lists reviewing-documents"
+assert_contains "$README" "**delegating-execution**" "README lists delegating-execution"
 
 echo ""
 if [ "$failures" -gt 0 ]; then
