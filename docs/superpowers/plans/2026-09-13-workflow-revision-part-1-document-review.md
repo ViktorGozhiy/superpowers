@@ -863,6 +863,8 @@ grep -o '"name":"Agent"[^}]*' probe-a.jsonl | head -5
 grep -o '"model":"[a-z0-9-]*"' probe-a.jsonl | sort | uniq -c
 ```
 
+The aggregate model count also includes the driving session's own turns (it runs on `opus` too), so read the model off the `Agent` tool-use entries printed by the first grep; the same applies to Probes B and D.
+
 Expected: at least one `Agent` dispatch whose prompt contains `Plan Document Reviewer` text or the words `plan document reviewer`, with `"model":"opus"` on that dispatch; the transcript mentions `reviewing-documents`; the plan file exists under `docs/superpowers/plans/` and, if the reviewer raised Issues, a commit `docs: address plan review round 1` exists in the fixture's `git log`.
 
 Record in `tests/claude-code/probes/workflow-revision-probes.md`: the command, the dispatch count, the model on each dispatch, rounds run, and whether the transcript shows a full re-read in round 2 (it should not).
